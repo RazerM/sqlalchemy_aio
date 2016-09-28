@@ -17,7 +17,7 @@ DESCRIPTION = metadata['description']
 
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
-requires = ['represent>=1.4']
+requires = ['represent>=1.4', 'sqlalchemy']
 
 extras_require = dict()
 
