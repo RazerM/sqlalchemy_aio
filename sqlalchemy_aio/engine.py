@@ -52,11 +52,11 @@ class AsyncioEngine:
         rp = await self._run_in_thread(self._engine.execute, *args, **kwargs)
         return AsyncioResultProxy(rp, self)
 
-    def has_table(self, table_name, schema=None):
-        return self._run_in_thread(self._engine.has_table, table_name, schema)
+    async def has_table(self, table_name, schema=None):
+        return await self._run_in_thread(self._engine.has_table, table_name, schema)
 
-    def table_names(self, schema=None, connection=None):
-        return self._run_in_thread(
+    async def table_names(self, schema=None, connection=None):
+        return await self._run_in_thread(
             self._engine.table_names, schema, connection)
 
     def __repr__(self):
@@ -98,14 +98,14 @@ class AsyncioTransaction:
         self._transaction = transaction
         self._engine = engine
 
-    def commit(self):
-        return self._engine._run_in_thread(self._transaction.commit)
+    async def commit(self):
+        return await self._engine._run_in_thread(self._transaction.commit)
 
-    def rollback(self):
-        return self._engine._run_in_thread(self._transaction.rollback)
+    async def rollback(self):
+        return await self._engine._run_in_thread(self._transaction.rollback)
 
-    def close(self):
-        return self._engine._run_in_thread(self._transaction.close)
+    async def close(self):
+        return await self._engine._run_in_thread(self._transaction.close)
 
 
 class AsyncioResultProxy:
@@ -113,20 +113,20 @@ class AsyncioResultProxy:
         self._result_proxy = result_proxy
         self._engine = engine
 
-    def fetchone(self):
-        return self._engine._run_in_thread(self._result_proxy.fetchone)
+    async def fetchone(self):
+        return await self._engine._run_in_thread(self._result_proxy.fetchone)
 
-    def fetchall(self):
-        return self._engine._run_in_thread(self._result_proxy.fetchall)
+    async def fetchall(self):
+        return await self._engine._run_in_thread(self._result_proxy.fetchall)
 
-    def scalar(self):
-        return self._engine._run_in_thread(self._result_proxy.scalar)
+    async def scalar(self):
+        return await self._engine._run_in_thread(self._result_proxy.scalar)
 
-    def first(self):
-        return self._engine._run_in_thread(self._result_proxy.first)
+    async def first(self):
+        return await self._engine._run_in_thread(self._result_proxy.first)
 
-    def keys(self):
-        return self._engine._run_in_thread(self._result_proxy.keys)
+    async def keys(self):
+        return await self._engine._run_in_thread(self._result_proxy.keys)
 
     @property
     def returns_rows(self):
