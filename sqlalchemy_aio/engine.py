@@ -20,11 +20,14 @@ class AsyncioEngine:
             executor = ThreadPoolExecutor(max_workers=1)
         self._executor = executor
 
-    def _run_in_thread(self, func, *args, **kwargs):
+    def _run_in_thread(_engine_self, _engine_func, *args, **kwargs):
+        # use _engine_self and _engine_func in case we're called with kwargs
+        # "self" or "func".
         if kwargs:
-            func = partial(func, **kwargs)
+            _engine_func = partial(_engine_func, **kwargs)
 
-        return self._loop.run_in_executor(self._executor, func, *args)
+        return _engine_self._loop.run_in_executor(
+            _engine_self._executor, _engine_func, *args)
 
     @property
     def dialect(self):
