@@ -1,6 +1,8 @@
 sqlalchemy_aio
 ==============
 
+|Travis| |Coverage| |MIT License|
+
 ``sqlalchemy_aio`` adds asyncio support to SQLAlchemy core, derived from
 `alchimia`_.
 
@@ -61,3 +63,10 @@ Getting started
     if __name__ == '__main__':
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
+
+.. |Travis| image:: http://img.shields.io/travis/RazerM/sqlalchemy_aio/master.svg?style=flat-square&label=travis
+   :target: https://travis-ci.org/RazerM/sqlalchemy_aio
+.. |Coverage| image:: https://img.shields.io/codecov/c/github/RazerM/sqlalchemy_aio/master.svg?style=flat-square
+   :target: https://codecov.io/github/RazerM/sqlalchemy_aio?branch=master
+.. |MIT License| image:: http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
+   :target: https://raw.githubusercontent.com/RazerM/sqlalchemy_aio/master/LICENSE
