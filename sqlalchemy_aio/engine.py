@@ -62,6 +62,9 @@ class AsyncioEngine:
         return await self._run_in_thread(self._engine.has_table, table_name, schema)
 
     async def table_names(self, schema=None, connection=None):
+        if connection is not None:
+            connection = connection._connection
+
         return await self._run_in_thread(
             self._engine.table_names, schema, connection)
 
