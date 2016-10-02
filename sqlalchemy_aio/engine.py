@@ -51,6 +51,9 @@ class AsyncioEngine:
         connection = await self._run_in_thread(self._engine.connect)
         return AsyncioConnection(connection, self)
 
+    def begin(self, close_with_result=False):
+        return _EngineTransactionContextManager(self, close_with_result)
+
     async def execute(self, *args, **kwargs):
         rp = await self._run_in_thread(self._engine.execute, *args, **kwargs)
         return AsyncioResultProxy(rp, self)
@@ -186,6 +189,24 @@ class _BaseContextManager(Coroutine):
     async def __aenter__(self):
         self._result = await self._coro
         return self._result
+
+
+class _EngineTransactionContextManager:
+    __slots__ = ('_engine', '_close_with_result', '_context')
+
+    def __init__(self, engine: AsyncioEngine, close_with_result):
+        self._engine = engine
+        self._close_with_result = close_with_result
+
+    async def __aenter__(self):
+        self._context = await self._engine._run_in_thread(
+            self._engine._engine.begin, self._close_with_result)
+
+        return AsyncioConnection(self._context.__enter__(), self._engine)
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return await self._engine._run_in_thread(
+            self._context.__exit__, exc_type, exc_val, exc_tb)
 
 
 class _ConnectionContextManager(_BaseContextManager):
