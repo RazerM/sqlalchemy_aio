@@ -7,3 +7,4 @@ dist/
 htmlcov/
 .cache/
 .coverage
+.tox/

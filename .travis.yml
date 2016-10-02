@@ -1,0 +1,18 @@
+language: python
+
+cache:
+    directories:
+        - $HOME/.cache/pip
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35
+
+install:
+  - pip install tox codecov
+
+script:
+  - tox
+
+after_success:
+  - codecov --env TRAVIS_OS_NAME TOXENV
