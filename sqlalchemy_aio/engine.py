@@ -87,12 +87,12 @@ class AsyncioConnection:
     def closed(self):
         return self._connection.closed
 
-    def begin(self, *args, **kwargs):
-        return _TransactionContextManager(self._begin(*args, **kwargs))
+    def begin(self):
+        return _TransactionContextManager(self._begin())
 
-    async def _begin(self, *args, **kwargs):
+    async def _begin(self):
         transaction = await self._engine._run_in_thread(
-            self._connection.begin, *args, **kwargs)
+            self._connection.begin)
         return AsyncioTransaction(transaction, self._engine)
 
 
