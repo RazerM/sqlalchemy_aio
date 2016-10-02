@@ -134,6 +134,9 @@ class AsyncioResultProxy:
     async def keys(self):
         return await self._engine._run_in_thread(self._result_proxy.keys)
 
+    async def close(self):
+        return await self._engine._run_in_thread(self._result_proxy.close)
+
     @property
     def returns_rows(self):
         return self._result_proxy.returns_rows
