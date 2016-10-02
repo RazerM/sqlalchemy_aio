@@ -95,6 +95,9 @@ class AsyncioConnection:
             self._connection.begin)
         return AsyncioTransaction(transaction, self._engine)
 
+    def in_transaction(self):
+        return self._connection.in_transaction()
+
 
 class AsyncioTransaction:
     def __init__(self, transaction, engine):
