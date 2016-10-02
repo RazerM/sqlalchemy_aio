@@ -23,6 +23,7 @@ extras_require = dict()
 
 extras_require['test'] = {
     'pytest',
+    'pytest-asyncio',
 }
 
 
