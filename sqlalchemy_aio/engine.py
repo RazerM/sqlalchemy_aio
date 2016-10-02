@@ -95,6 +95,14 @@ class AsyncioConnection:
             self._connection.begin)
         return AsyncioTransaction(transaction, self._engine)
 
+    def begin_nested(self):
+        return _TransactionContextManager(self._begin_nested())
+
+    async def _begin_nested(self):
+        transaction = await self._engine._run_in_thread(
+            self._connection.begin_nested)
+        return AsyncioTransaction(transaction, self._engine)
+
     def in_transaction(self):
         return self._connection.in_transaction()
 
