@@ -9,11 +9,14 @@ from sqlalchemy.engine import Engine
 
 
 class AsyncioEngine:
-    def __init__(self, pool, dialect, url, loop=None, executor=None, **kwargs):
+    def __init__(self, pool, dialect, url, logging_name=None, echo=None,
+                 execution_options=None, loop=None, executor=None, **kwargs):
         if loop is None:
             loop = asyncio.get_event_loop()
 
-        self._engine = Engine(pool, dialect, url, **kwargs)
+        self._engine = Engine(
+            pool, dialect, url, logging_name=logging_name, echo=echo,
+            execution_options=execution_options, **kwargs)
         self._loop = loop
         if executor is None:
             # Need max_workers=1 for sqlite
@@ -36,6 +39,10 @@ class AsyncioEngine:
     @property
     def _has_events(self):
         return self._engine._has_events
+
+    @property
+    def logger(self):
+        return self._engine.logger
 
     @property
     def _execution_options(self):

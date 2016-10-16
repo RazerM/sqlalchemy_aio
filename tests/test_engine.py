@@ -103,3 +103,20 @@ async def test_table_names_with_connection(engine, mytable):
 
 def test_repr(engine):
     assert repr(engine) == 'AsyncioEngine<Engine(sqlite://)>'
+
+
+def test_engine_keywords():
+    # SQLAlchemy checks which keywords AsyncioEngine expects, so check that
+    # echo, logging_name, and execution_options are accepted and then passed on
+    # by AsyncioEngine.
+
+    with patch('sqlalchemy_aio.engine.Engine') as mock_engine:
+        create_engine('sqlite://', strategy=ASYNCIO_STRATEGY, echo=True,
+                      logging_name='myengine', execution_options=dict())
+
+        kwargs = mock_engine.call_args[1]
+        assert {'echo', 'logging_name', 'execution_options'} <= set(kwargs)
+
+
+def test_logger(engine):
+    assert engine.logger
