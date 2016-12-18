@@ -1,0 +1,4 @@
+-e .
+invoke
+sphinx
+sphinx-autobuild
