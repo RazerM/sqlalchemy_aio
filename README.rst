@@ -67,7 +67,7 @@ Getting started
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/sqlalchemy_aio.svg?style=flat-square
    :target: https://pypi.python.org/pypi/sqlalchemy_aio/
 .. |Documentation| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat-square
-   :target: https://sqlalchemy_aio.readthedocs.io/en/latest/
+   :target: https://sqlalchemy-aio.readthedocs.io/en/latest/
 .. |Travis| image:: http://img.shields.io/travis/RazerM/sqlalchemy_aio/master.svg?style=flat-square&label=travis
    :target: https://travis-ci.org/RazerM/sqlalchemy_aio
 .. |Coverage| image:: https://img.shields.io/codecov/c/github/RazerM/sqlalchemy_aio/master.svg?style=flat-square
