@@ -1,4 +1,5 @@
-from unittest.mock import patch
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import Mock, call, patch
 
 import pytest
 from sqlalchemy import create_engine, select
@@ -11,6 +12,35 @@ from sqlalchemy_aio.engine import AsyncioConnection, AsyncioEngine
 def test_create_engine():
     engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY)
     assert isinstance(engine, AsyncioEngine)
+
+
+def test_create_engine_args():
+    executor = Mock()
+    loop = Mock()
+
+    engine = create_engine(
+        'sqlite://', loop=loop, executor=executor, strategy=ASYNCIO_STRATEGY)
+
+    def fn():
+        pass
+
+    engine._run_in_thread(fn)
+
+    assert loop.run_in_executor.call_args_list == [call(executor, fn)]
+
+
+@pytest.mark.asyncio
+async def test_run_in_thread(engine):
+    def fn(*args, **kwargs):
+        return args, kwargs
+
+    assert await engine._run_in_thread(fn) == ((), {})
+    assert await engine._run_in_thread(fn, 1, 2, a=3) == ((1, 2), {'a': 3})
+    assert await engine._run_in_thread(fn, 1) == ((1,), {})
+
+    # Test that self is passed to the function rather than consumed by the
+    # method.
+    assert await engine._run_in_thread(fn, self=1) == ((), {'self': 1})
 
 
 @pytest.mark.asyncio
@@ -63,6 +93,36 @@ async def test_implicit_transaction_failure(engine, mytable):
     result = await engine.execute(mytable.select())
     rows = await result.fetchall()
     assert len(rows) == 0
+
+
+@pytest.mark.asyncio
+async def test_implicit_transaction_commit_failure(engine, mytable):
+    from sqlalchemy_aio.engine import AsyncioTransaction
+
+    await engine.execute(CreateTable(mytable))
+
+    # Patch commit to raise an exception. We can then check that a) the
+    # transaction is rolled back, and b) that the exception is reraised.
+    patch_commit = patch.object(
+        AsyncioTransaction, 'commit', side_effect=RuntimeError)
+
+    # Patch a coroutine in place of AsyncioTransaction.rollback that calls
+    # a Mock which we can later check.
+    mock_rollback = Mock()
+
+    async def mock_coro(*args, **kwargs):
+        mock_rollback(*args, **kwargs)
+
+    patch_rollback = patch.object(AsyncioTransaction, 'rollback', mock_coro)
+
+    with pytest.raises(RuntimeError):
+        with patch_commit, patch_rollback:
+
+            async with engine.connect() as conn:
+                async with conn.begin() as trans:
+                    await conn.execute(mytable.insert())
+
+    assert mock_rollback.call_count == 1
 
 
 @pytest.mark.asyncio
