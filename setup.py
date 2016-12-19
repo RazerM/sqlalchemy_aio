@@ -57,7 +57,7 @@ setup(
     packages=find_packages(exclude=['tests']),
     cmdclass={'test': PyTest},
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
     ],
