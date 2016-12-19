@@ -12,9 +12,17 @@ def build_docs(ctx, watch=False):
     else:
         ctx.run('sphinx-build -b html -W -E docs docs/_build/html')
 
-namespace = Collection()
+
+@task
+def release(ctx, version):
+    ctx.run("git tag {0} -m '{0} release'".format(version))
+    ctx.run('git push --tags')
+    ctx.run('rm dist/*')
+    ctx.run('python setup.py sdist bdist_wheel')
+    ctx.run('twine upload dist/*')
+
 
 docs = Collection('docs')
 docs.add_task(build_docs, 'build')
 
-namespace.add_collection(docs)
+namespace = Collection(release, docs)
