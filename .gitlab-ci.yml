@@ -1,0 +1,17 @@
+cache:
+  paths:
+    - pip_cache
+
+before_script:
+  - export PIP_CACHE_DIR="pip_cache"
+  - pip install .[test]
+
+test:3.5:
+  image: python:3.5
+  script:
+  - pytest
+
+test:3.6:
+  image: python:3.6
+  script:
+  - pytest
