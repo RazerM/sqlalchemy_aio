@@ -14,6 +14,15 @@ critical, perhaps `asyncpg`_ can help.
 
 .. _asyncpg: https://github.com/MagicStack/asyncpg
 
+Threading Model
+---------------
+
+Explicit connections (:meth:`engine.connect()\
+<sqlalchemy_aio.engine.AsyncioEngine.connect>`) each run in their own thread.
+For implicit connections (e.g. :meth:`engine.execute()\
+<sqlalchemy_aio.engine.AsyncioEngine.execute>`), the engine may use multiple
+threads as long as the DBAPI is thread safe (the SQLite DBAPI is not).
+
 Getting started
 ---------------
 

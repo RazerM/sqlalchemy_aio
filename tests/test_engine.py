@@ -6,27 +6,13 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio import ASYNCIO_STRATEGY
-from sqlalchemy_aio.engine import AsyncioConnection, AsyncioEngine
+from sqlalchemy_aio.engine import (
+    AsyncioConnection, AsyncioEngine, AsyncioTransaction)
 
 
 def test_create_engine():
     engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY)
     assert isinstance(engine, AsyncioEngine)
-
-
-def test_create_engine_args():
-    executor = Mock()
-    loop = Mock()
-
-    engine = create_engine(
-        'sqlite://', loop=loop, executor=executor, strategy=ASYNCIO_STRATEGY)
-
-    def fn():
-        pass
-
-    engine._run_in_thread(fn)
-
-    assert loop.run_in_executor.call_args_list == [call(executor, fn)]
 
 
 @pytest.mark.asyncio
@@ -97,10 +83,6 @@ async def test_implicit_transaction_failure(engine, mytable):
 
 @pytest.mark.asyncio
 async def test_implicit_transaction_commit_failure(engine, mytable):
-    from sqlalchemy_aio.engine import AsyncioTransaction
-
-    await engine.execute(CreateTable(mytable))
-
     # Patch commit to raise an exception. We can then check that a) the
     # transaction is rolled back, and b) that the exception is reraised.
     patch_commit = patch.object(
@@ -119,6 +101,8 @@ async def test_implicit_transaction_commit_failure(engine, mytable):
         with patch_commit, patch_rollback:
 
             async with engine.connect() as conn:
+                await conn.execute(CreateTable(mytable))
+
                 async with conn.begin() as trans:
                     await conn.execute(mytable.insert())
 
@@ -154,14 +138,15 @@ async def test_table_names_with_connection(engine, mytable):
 
     with patch_conn as mock_conn:
         assert await engine.table_names(connection=conn) == []
-        await engine.execute(CreateTable(mytable))
+        await conn.execute(CreateTable(mytable))
         assert await engine.table_names(connection=conn) == ['mytable']
         assert mock_conn.execute.called
 
     await conn.close()
 
 
-def test_repr(engine):
+def test_repr():
+    engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY)
     assert repr(engine) == 'AsyncioEngine<Engine(sqlite://)>'
 
 

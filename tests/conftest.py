@@ -21,11 +21,19 @@ def fix_pysqlite_transactions(engine):
         conn.execute('BEGIN')
 
 
-@pytest.fixture
-def engine(event_loop):
-    engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY,
-                           loop=event_loop)
+@pytest.fixture(params=[True, False], ids=['memory', 'file'])
+def engine(request, tmpdir):
+    # sqlite has different behaviour when used with multiple threads with an
+    # in-memory or file database.
+    if request.param:
+        url = 'sqlite:///:memory:'
+    else:
+        file = tmpdir.join('test.db')
+        url = 'sqlite:///' + str(file)
+
+    engine = create_engine(url, strategy=ASYNCIO_STRATEGY)
     fix_pysqlite_transactions(engine._engine)
+
     return engine
 
 

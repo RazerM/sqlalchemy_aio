@@ -4,35 +4,45 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
 from represent import ReprHelper
-from sqlalchemy import util
+from sqlalchemy import inspect, util
 from sqlalchemy.engine import Engine
+
+
+async def _run_in_executor(_executor, _func, *args, **kwargs):
+    # use _executor and _func in case we're called with kwargs
+    # "executor" or "func".
+    if kwargs:
+        _func = partial(_func, **kwargs)
+
+    loop = asyncio.get_event_loop()
+
+    return await loop.run_in_executor(_executor, _func, *args)
 
 
 class AsyncioEngine:
     """Mostly like :class:`sqlalchemy.engine.Engine` except some of the methods
     are coroutines."""
     def __init__(self, pool, dialect, url, logging_name=None, echo=None,
-                 execution_options=None, loop=None, executor=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
+                 execution_options=None, **kwargs):
 
         self._engine = Engine(
             pool, dialect, url, logging_name=logging_name, echo=echo,
             execution_options=execution_options, **kwargs)
-        self._loop = loop
-        if executor is None:
-            # Need max_workers=1 for sqlite
-            executor = ThreadPoolExecutor(max_workers=1)
-        self._executor = executor
 
-    def _run_in_thread(_engine_self, _engine_func, *args, **kwargs):
-        # use _engine_self and _engine_func in case we're called with kwargs
-        # "self" or "func".
-        if kwargs:
-            _engine_func = partial(_engine_func, **kwargs)
+        max_workers = None
 
-        return _engine_self._loop.run_in_executor(
-            _engine_self._executor, _engine_func, *args)
+        # https://www.python.org/dev/peps/pep-0249/#threadsafety
+        if dialect.dbapi.threadsafety < 2:
+            # This might seem overly-restrictive, but when we instantiate an
+            # AsyncioResultProxy from AsyncioEngine.execute, subsequent
+            # fetchone calls could be in different threads. Let's limit to one.
+            max_workers = 1
+
+        self._engine_executor = ThreadPoolExecutor(max_workers=max_workers)
+
+    async def _run_in_thread(_self, _func, *args, **kwargs):
+        return await _run_in_executor(
+            _self._engine_executor, _func, *args, **kwargs)
 
     @property
     def dialect(self):
@@ -73,8 +83,10 @@ class AsyncioEngine:
         return _ConnectionContextManager(self._connect())
 
     async def _connect(self):
-        connection = await self._run_in_thread(self._engine.connect)
-        return AsyncioConnection(connection, self)
+        executor = ThreadPoolExecutor(max_workers=1)
+
+        connection = await _run_in_executor(executor, self._engine.connect)
+        return AsyncioConnection(connection, executor)
 
     def begin(self, close_with_result=False):
         """Like :meth:`Engine.begin <sqlalchemy.engine.Engine.begin>`, but
@@ -107,7 +119,7 @@ class AsyncioEngine:
             in a different thread.
         """
         rp = await self._run_in_thread(self._engine.execute, *args, **kwargs)
-        return AsyncioResultProxy(rp, self)
+        return AsyncioResultProxy(rp, self._run_in_thread)
 
     async def has_table(self, table_name, schema=None):
         """Like :meth:`Engine.has_table <sqlalchemy.engine.Engine.has_table>`,
@@ -116,15 +128,18 @@ class AsyncioEngine:
         return await self._run_in_thread(
             self._engine.has_table, table_name, schema)
 
-    async def table_names(self, schema=None, connection=None):
+    async def table_names(
+            self, schema=None, connection: 'AsyncioConnection' = None):
         """Like :meth:`Engine.table_names <sqlalchemy.engine.Engine.table_names>`,
         but is a coroutine.
         """
+        run_in_thread = self._run_in_thread
+
         if connection is not None:
+            run_in_thread = connection._run_in_thread
             connection = connection._connection
 
-        return await self._run_in_thread(
-            self._engine.table_names, schema, connection)
+        return await run_in_thread(self._engine.table_names, schema, connection)
 
     def __repr__(self):
         r = ReprHelper(self)
@@ -137,9 +152,12 @@ class AsyncioConnection:
     """Mostly like :class:`sqlalchemy.engine.Connection` except some of the
     methods are coroutines.
     """
-    def __init__(self, connection, engine: AsyncioEngine):
+    def __init__(self, connection, executor):
         self._connection = connection
-        self._engine = engine
+        self._executor = executor
+
+    async def _run_in_thread(_self, _func, *args, **kwargs):
+        return await _run_in_executor(_self._executor, _func, *args, **kwargs)
 
     async def execute(self, *args, **kwargs):
         """Like :meth:`Connection.execute <sqlalchemy.engine.Connection.execute>`,
@@ -159,16 +177,14 @@ class AsyncioConnection:
             this will raise an exception since the DBAPI connection was created
             in a different thread.
         """
-        rp = await self._engine._run_in_thread(
-            self._connection.execute, *args, **kwargs)
-        return AsyncioResultProxy(rp, self._engine)
+        rp = await self._run_in_thread(self._connection.execute, *args, **kwargs)
+        return AsyncioResultProxy(rp, self._run_in_thread)
 
     def close(self, *args, **kwargs):
         """Like :meth:`Connection.close <sqlalchemy.engine.Connection.close>`,
         but is a coroutine.
         """
-        return self._engine._run_in_thread(
-            self._connection.close, *args, **kwargs)
+        return self._run_in_thread(self._connection.close, *args, **kwargs)
 
     @property
     def closed(self):
@@ -199,9 +215,8 @@ class AsyncioConnection:
         return _TransactionContextManager(self._begin())
 
     async def _begin(self):
-        transaction = await self._engine._run_in_thread(
-            self._connection.begin)
-        return AsyncioTransaction(transaction, self._engine)
+        transaction = await self._run_in_thread(self._connection.begin)
+        return AsyncioTransaction(transaction, self._run_in_thread)
 
     def begin_nested(self):
         """Like :meth:`Connection.begin_nested\
@@ -213,9 +228,8 @@ class AsyncioConnection:
         return _TransactionContextManager(self._begin_nested())
 
     async def _begin_nested(self):
-        transaction = await self._engine._run_in_thread(
-            self._connection.begin_nested)
-        return AsyncioTransaction(transaction, self._engine)
+        transaction = await self._run_in_thread(self._connection.begin_nested)
+        return AsyncioTransaction(transaction, self._run_in_thread)
 
     def in_transaction(self):
         """Like the :attr:`Connection.in_transaction\
@@ -228,72 +242,72 @@ class AsyncioTransaction:
     """Mostly like :class:`sqlalchemy.engine.Transaction` except some of the
     methods are coroutines.
     """
-    def __init__(self, transaction, engine):
+    def __init__(self, transaction, run_in_thread):
         self._transaction = transaction
-        self._engine = engine
+        self._run_in_thread = run_in_thread
 
     async def commit(self):
         """Like :meth:`Transaction.commit <sqlalchemy.engine.Transaction.commit>`,
         but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._transaction.commit)
+        return await self._run_in_thread(self._transaction.commit)
 
     async def rollback(self):
         """Like :meth:`Transaction.rollback <sqlalchemy.engine.Transaction.rollback>`,
         but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._transaction.rollback)
+        return await self._run_in_thread(self._transaction.rollback)
 
     async def close(self):
         """Like :meth:`Transaction.close <sqlalchemy.engine.Transaction.close>`,
         but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._transaction.close)
+        return await self._run_in_thread(self._transaction.close)
 
 
 class AsyncioResultProxy:
     """Mostly like :class:`sqlalchemy.engine.ResultProxy` except some of the
     methods are coroutines.
     """
-    def __init__(self, result_proxy, engine: AsyncioEngine):
+    def __init__(self, result_proxy, run_in_thread):
         self._result_proxy = result_proxy
-        self._engine = engine
+        self._run_in_thread = run_in_thread
 
     async def fetchone(self):
         """Like :meth:`ResultProxy.fetchone\
         <sqlalchemy.engine.ResultProxy.fetchone>`, but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._result_proxy.fetchone)
+        return await self._run_in_thread(self._result_proxy.fetchone)
 
     async def fetchall(self):
         """Like :meth:`ResultProxy.fetchall\
         <sqlalchemy.engine.ResultProxy.fetchall>`, but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._result_proxy.fetchall)
+        return await self._run_in_thread(self._result_proxy.fetchall)
 
     async def scalar(self):
         """Like :meth:`ResultProxy.scalar\
         <sqlalchemy.engine.ResultProxy.scalar>`, but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._result_proxy.scalar)
+        return await self._run_in_thread(self._result_proxy.scalar)
 
     async def first(self):
         """Like :meth:`ResultProxy.first\
         <sqlalchemy.engine.ResultProxy.first>`, but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._result_proxy.first)
+        return await self._run_in_thread(self._result_proxy.first)
 
     async def keys(self):
         """Like :meth:`ResultProxy.keys\
         <sqlalchemy.engine.ResultProxy.keys>`, but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._result_proxy.keys)
+        return await self._run_in_thread(self._result_proxy.keys)
 
     async def close(self):
         """Like :meth:`ResultProxy.close\
         <sqlalchemy.engine.ResultProxy.close>`, but is a coroutine.
         """
-        return await self._engine._run_in_thread(self._result_proxy.close)
+        return await self._run_in_thread(self._result_proxy.close)
 
     @property
     def returns_rows(self):
@@ -358,7 +372,8 @@ class _EngineTransactionContextManager:
         self._context = await self._engine._run_in_thread(
             self._engine._engine.begin, self._close_with_result)
 
-        return AsyncioConnection(self._context.__enter__(), self._engine)
+        return AsyncioConnection(
+            self._context.__enter__(), self._engine._engine_executor)
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self._engine._run_in_thread(
