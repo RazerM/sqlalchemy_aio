@@ -4,30 +4,33 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
 from represent import ReprHelper
-from sqlalchemy import inspect, util
+from sqlalchemy import util
 from sqlalchemy.engine import Engine
 
 
-async def _run_in_executor(_executor, _func, *args, **kwargs):
+async def _run_in_executor(_executor, _func, _loop=None, *args, **kwargs):
     # use _executor and _func in case we're called with kwargs
     # "executor" or "func".
     if kwargs:
         _func = partial(_func, **kwargs)
 
-    loop = asyncio.get_event_loop()
+    if _loop is None:
+        _loop = asyncio.get_event_loop()
 
-    return await loop.run_in_executor(_executor, _func, *args)
+    return await _loop.run_in_executor(_executor, _func, *args)
 
 
 class AsyncioEngine:
     """Mostly like :class:`sqlalchemy.engine.Engine` except some of the methods
     are coroutines."""
     def __init__(self, pool, dialect, url, logging_name=None, echo=None,
-                 execution_options=None, **kwargs):
+                 execution_options=None, loop=None, **kwargs):
 
         self._engine = Engine(
             pool, dialect, url, logging_name=logging_name, echo=echo,
             execution_options=execution_options, **kwargs)
+
+        self._loop = loop
 
         max_workers = None
 
@@ -42,7 +45,7 @@ class AsyncioEngine:
 
     async def _run_in_thread(_self, _func, *args, **kwargs):
         return await _run_in_executor(
-            _self._engine_executor, _func, *args, **kwargs)
+            _self._engine_executor, _func, _self._loop, *args, **kwargs)
 
     @property
     def dialect(self):
@@ -85,8 +88,9 @@ class AsyncioEngine:
     async def _connect(self):
         executor = ThreadPoolExecutor(max_workers=1)
 
-        connection = await _run_in_executor(executor, self._engine.connect)
-        return AsyncioConnection(connection, executor)
+        connection = await _run_in_executor(
+            executor, self._engine.connect, self._loop)
+        return AsyncioConnection(connection, executor, self._loop)
 
     def begin(self, close_with_result=False):
         """Like :meth:`Engine.begin <sqlalchemy.engine.Engine.begin>`, but
@@ -152,12 +156,14 @@ class AsyncioConnection:
     """Mostly like :class:`sqlalchemy.engine.Connection` except some of the
     methods are coroutines.
     """
-    def __init__(self, connection, executor):
+    def __init__(self, connection, executor, loop=None):
         self._connection = connection
         self._executor = executor
+        self._loop = loop
 
     async def _run_in_thread(_self, _func, *args, **kwargs):
-        return await _run_in_executor(_self._executor, _func, *args, **kwargs)
+        return await _run_in_executor(
+            _self._executor, _func, _self._loop, *args, **kwargs)
 
     async def execute(self, *args, **kwargs):
         """Like :meth:`Connection.execute <sqlalchemy.engine.Connection.execute>`,
@@ -373,7 +379,8 @@ class _EngineTransactionContextManager:
             self._engine._engine.begin, self._close_with_result)
 
         return AsyncioConnection(
-            self._context.__enter__(), self._engine._engine_executor)
+            self._context.__enter__(), self._engine._engine_executor,
+            self._engine._loop)
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self._engine._run_in_thread(

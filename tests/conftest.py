@@ -22,7 +22,7 @@ def fix_pysqlite_transactions(engine):
 
 
 @pytest.fixture(params=[True, False], ids=['memory', 'file'])
-def engine(request, tmpdir):
+def engine(request, tmpdir, event_loop):
     # sqlite has different behaviour when used with multiple threads with an
     # in-memory or file database.
     if request.param:
@@ -31,7 +31,7 @@ def engine(request, tmpdir):
         file = tmpdir.join('test.db')
         url = 'sqlite:///' + str(file)
 
-    engine = create_engine(url, strategy=ASYNCIO_STRATEGY)
+    engine = create_engine(url, strategy=ASYNCIO_STRATEGY, loop=event_loop)
     fix_pysqlite_transactions(engine._engine)
 
     return engine

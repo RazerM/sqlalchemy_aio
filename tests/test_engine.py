@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -15,7 +14,16 @@ def test_create_engine():
     assert isinstance(engine, AsyncioEngine)
 
 
-@pytest.mark.asyncio
+def test_create_engine_args():
+    loop = Mock()
+
+    engine = create_engine(
+        'sqlite://', loop=loop, strategy=ASYNCIO_STRATEGY)
+
+    assert engine._loop is loop
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_run_in_thread(engine):
     def fn(*args, **kwargs):
         return args, kwargs
@@ -29,21 +37,21 @@ async def test_run_in_thread(engine):
     assert await engine._run_in_thread(fn, self=1) == ((), {'self': 1})
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_connect(engine):
     conn = await engine.connect()
     assert isinstance(conn, AsyncioConnection)
     await conn.close()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_connect_context_manager(engine):
     async with engine.connect() as conn:
         assert isinstance(conn, AsyncioConnection)
     assert conn.closed
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_implicit_transaction_success(engine, mytable):
     async with engine.begin() as conn:
         assert isinstance(conn, AsyncioConnection)
@@ -60,7 +68,7 @@ async def test_implicit_transaction_success(engine, mytable):
     assert len(rows) == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_implicit_transaction_failure(engine, mytable):
     await engine.execute(CreateTable(mytable))
 
@@ -81,7 +89,7 @@ async def test_implicit_transaction_failure(engine, mytable):
     assert len(rows) == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_implicit_transaction_commit_failure(engine, mytable):
     # Patch commit to raise an exception. We can then check that a) the
     # transaction is rolled back, and b) that the exception is reraised.
@@ -109,27 +117,27 @@ async def test_implicit_transaction_commit_failure(engine, mytable):
     assert mock_rollback.call_count == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_execute(engine):
     result = await engine.execute(select([1]))
     assert await result.scalar() == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_has_table(engine, mytable):
     assert not await engine.has_table('mytable')
     await engine.execute(CreateTable(mytable))
     assert await engine.has_table('mytable')
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_table_names(engine, mytable):
     assert await engine.table_names() == []
     await engine.execute(CreateTable(mytable))
     assert await engine.table_names() == ['mytable']
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_table_names_with_connection(engine, mytable):
     conn = await engine.connect()
 
