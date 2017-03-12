@@ -64,6 +64,5 @@ setup(
     license=LICENSE,
     install_requires=requires,
     extras_require=extras_require,
-    # Require 3.5.3 for asyncio.get_event_loop fix
     python_requires='>=3.5',
 )
