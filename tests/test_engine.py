@@ -17,8 +17,7 @@ def test_create_engine():
 def test_create_engine_args():
     loop = Mock()
 
-    engine = create_engine(
-        'sqlite://', loop=loop, strategy=ASYNCIO_STRATEGY)
+    engine = create_engine('sqlite://', loop=loop, strategy=ASYNCIO_STRATEGY)
 
     assert engine._loop is loop
 
