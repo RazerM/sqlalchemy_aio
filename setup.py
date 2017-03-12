@@ -22,7 +22,7 @@ requires = ['represent>=1.4', 'sqlalchemy']
 extras_require = dict()
 
 extras_require['test'] = {
-    'pytest',
+    'pytest >= 3',
     'pytest-asyncio',
 }
 
@@ -65,5 +65,5 @@ setup(
     install_requires=requires,
     extras_require=extras_require,
     # Require 3.5.3 for asyncio.get_event_loop fix
-    python_requires='>=3.5.3',
+    python_requires='>=3.5',
 )
