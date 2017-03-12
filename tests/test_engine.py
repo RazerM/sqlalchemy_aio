@@ -22,6 +22,12 @@ def test_create_engine_args():
     assert engine._loop is loop
 
 
+@pytest.mark.asyncio
+async def test_implicit_loop():
+    engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY)
+    assert await engine.scalar(select([1])) == 1
+
+
 @pytest.mark.asyncio(forbid_global_loop=True)
 async def test_run_in_thread(engine):
     def fn(*args, **kwargs):
