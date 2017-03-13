@@ -6,9 +6,11 @@ N/A
 ### Added
 - `AsyncioEngine.scalar()`
 - `AsyncioConnection.scalar()`
+
 ### Fixed
 - Connections now get their own thread. Now threadsafe DBAPI modules are more
   useful without passing a custom executor as in 0.10.0
+
 ### Changed
 - **Backwords incompatible:** removed `executor` argument, since the engine
   takes care of threads now.
