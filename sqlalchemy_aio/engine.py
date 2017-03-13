@@ -125,6 +125,13 @@ class AsyncioEngine:
         rp = await self._run_in_thread(self._engine.execute, *args, **kwargs)
         return AsyncioResultProxy(rp, self._run_in_thread)
 
+    async def scalar(self, *args, **kwargs):
+        """Like :meth:`Connection.close <sqlalchemy.engine.Engine.scalar>`,
+        but is a coroutine.
+        """
+        rp = await self.execute(*args, **kwargs)
+        return await rp.scalar()
+
     async def has_table(self, table_name, schema=None):
         """Like :meth:`Engine.has_table <sqlalchemy.engine.Engine.has_table>`,
         but is a coroutine.
@@ -185,6 +192,13 @@ class AsyncioConnection:
         """
         rp = await self._run_in_thread(self._connection.execute, *args, **kwargs)
         return AsyncioResultProxy(rp, self._run_in_thread)
+
+    async def scalar(self, *args, **kwargs):
+        """Like :meth:`Connection.close <sqlalchemy.engine.Connection.scalar>`,
+        but is a coroutine.
+        """
+        rp = await self.execute(*args, **kwargs)
+        return await rp.scalar()
 
     async def close(self, *args, **kwargs):
         """Like :meth:`Connection.close <sqlalchemy.engine.Connection.close>`,

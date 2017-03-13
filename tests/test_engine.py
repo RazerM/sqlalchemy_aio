@@ -129,6 +129,11 @@ async def test_execute(engine):
 
 
 @pytest.mark.asyncio(forbid_global_loop=True)
+async def test_scalar(engine):
+    assert await engine.scalar(select([1])) == 1
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_has_table(engine, mytable):
     assert not await engine.has_table('mytable')
     await engine.execute(CreateTable(mytable))

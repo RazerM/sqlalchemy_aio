@@ -15,6 +15,12 @@ async def test_execute(engine):
 
 
 @pytest.mark.asyncio(forbid_global_loop=True)
+async def test_scalar(engine):
+    async with engine.connect() as conn:
+        assert await conn.scalar(select([1])) == 1
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_close(engine):
     conn = await engine.connect()
     assert not conn.closed
