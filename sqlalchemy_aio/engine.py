@@ -186,11 +186,11 @@ class AsyncioConnection:
         rp = await self._run_in_thread(self._connection.execute, *args, **kwargs)
         return AsyncioResultProxy(rp, self._run_in_thread)
 
-    def close(self, *args, **kwargs):
+    async def close(self, *args, **kwargs):
         """Like :meth:`Connection.close <sqlalchemy.engine.Connection.close>`,
         but is a coroutine.
         """
-        return self._run_in_thread(self._connection.close, *args, **kwargs)
+        return await self._run_in_thread(self._connection.close, *args, **kwargs)
 
     @property
     def closed(self):
