@@ -24,7 +24,9 @@ Getting started
 
     async def main():
         engine = create_engine(
-            'sqlite://', strategy=ASYNCIO_STRATEGY
+           # In-memory sqlite database cannot be accessed from different
+           # threads, use file.
+            'sqlite:///test.db', strategy=ASYNCIO_STRATEGY
         )
 
         metadata = MetaData()
