@@ -19,20 +19,22 @@ Getting started
     from sqlalchemy_aio import ASYNCIO_STRATEGY
 
     from sqlalchemy import (
-        MetaData, Table, Column, Integer, String, create_engine, select)
-    from sqlalchemy.schema import CreateTable
+        Column, Integer, MetaData, Table, Text, create_engine, select)
+    from sqlalchemy.schema import CreateTable, DropTable
+
 
     async def main():
         engine = create_engine(
-           # In-memory sqlite database cannot be accessed from different
-           # threads, use file.
+            # In-memory sqlite database cannot be accessed from different
+            # threads, use file.
             'sqlite:///test.db', strategy=ASYNCIO_STRATEGY
         )
 
         metadata = MetaData()
-        users = Table('users', metadata,
-            Column('id', Integer(), primary_key=True),
-            Column('name', String()),
+        users = Table(
+            'users', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', Text),
         )
 
         # Create the table
@@ -59,12 +61,15 @@ Getting started
         # Supports context async managers
         async with engine.connect() as conn:
             async with conn.begin() as trans:
-                r = await conn.execute(select([1]))
-                assert await r.fetchone() == (1,)
+                assert await conn.scalar(select([1])) == 1
+
+        await engine.execute(DropTable(users))
+
 
     if __name__ == '__main__':
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
+
 
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/sqlalchemy_aio.svg?style=flat-square
    :target: https://pypi.python.org/pypi/sqlalchemy_aio/
