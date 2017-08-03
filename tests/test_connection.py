@@ -5,8 +5,6 @@ from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio.engine import AsyncioTransaction
 
-# from sqlalchemy_aio.conftest import mytable
-
 
 @pytest.mark.asyncio(forbid_global_loop=True)
 async def test_execute(engine):
