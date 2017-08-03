@@ -84,6 +84,8 @@ async def test_aiter(engine, mytable):
     await engine.execute(mytable.insert())
     await engine.execute(mytable.insert())
     result = await engine.execute(select([mytable]))
-    fetched = [row async for row in result]
+    fetched = []
+    async for row in result:
+        fetched.append(row)
     await engine.execute(mytable.delete())
     assert len(fetched) == 2
