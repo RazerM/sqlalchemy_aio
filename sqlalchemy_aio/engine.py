@@ -285,6 +285,22 @@ class AsyncioTransaction:
         return await self._run_in_thread(self._transaction.close)
 
 
+class _AsyncioResultProxyIterator:
+    def __init__(self, result_proxy, run_in_thread):
+        self._result_proxy = result_proxy
+        self._run_in_thread = run_in_thread
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        row = await self._run_in_thread(self._result_proxy.fetchone)
+        if row is None:
+            raise StopAsyncIteration()
+        else:
+            return row
+
+
 class AsyncioResultProxy:
     """Mostly like :class:`sqlalchemy.engine.ResultProxy` except some of the
     methods are coroutines.
@@ -293,11 +309,22 @@ class AsyncioResultProxy:
         self._result_proxy = result_proxy
         self._run_in_thread = run_in_thread
 
+    def __aiter__(self):
+        return _AsyncioResultProxyIterator(
+            self._result_proxy,
+            self._run_in_thread)
+
     async def fetchone(self):
         """Like :meth:`ResultProxy.fetchone\
         <sqlalchemy.engine.ResultProxy.fetchone>`, but is a coroutine.
         """
         return await self._run_in_thread(self._result_proxy.fetchone)
+
+    async def fetchmany(self, size=None):
+        """Like :meth:`ResultProxy.fetchmany\
+        <sqlalchemy.engine.ResultProxy.fetchmany>`, but is a coroutine.
+        """
+        return await self._run_in_thread(self._result_proxy.fetchmany, size=size)
 
     async def fetchall(self):
         """Like :meth:`ResultProxy.fetchall\
