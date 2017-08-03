@@ -172,6 +172,16 @@ class AsyncioConnection:
         return await _run_in_executor(
             _self._executor, _func, _self._loop, *args, **kwargs)
 
+    def execution_options(self, **opt):
+        """Like
+        :meth:`Connection.execute <sqlalchemy.engine.Connection.execution_options>`,
+        """
+        options_connection = self._connection.execution_options(**opt)
+        return type(self)(
+            connection=options_connection,
+            executor=self._executor,
+            loop=self._loop)
+
     async def execute(self, *args, **kwargs):
         """Like :meth:`Connection.execute <sqlalchemy.engine.Connection.execute>`,
         but is a coroutine that returns an :class:`AsyncioResultProxy`.
@@ -293,11 +303,30 @@ class AsyncioResultProxy:
         self._result_proxy = result_proxy
         self._run_in_thread = run_in_thread
 
+    async def __aiter__(self):
+        """Like :meth:`ResultProxy.__iter__\
+        <sqlalchemy.engine.ResultProxy.__iter__>`, but is a coroutine.
+        """
+        iterator = iter(self._result_proxy)
+        while True:
+            try:
+                row = await self._run_in_thread(iterator.__next__)
+            except StopIteration:
+                raise StopAsyncIteration
+            else:
+                yield row
+
     async def fetchone(self):
         """Like :meth:`ResultProxy.fetchone\
         <sqlalchemy.engine.ResultProxy.fetchone>`, but is a coroutine.
         """
         return await self._run_in_thread(self._result_proxy.fetchone)
+
+    async def fetchmany(self, size=None):
+        """Like :meth:`ResultProxy.fetchmany\
+        <sqlalchemy.engine.ResultProxy.fetchmany>`, but is a coroutine.
+        """
+        return await self._run_in_thread(self._result_proxy.fetchmany, size=size)
 
     async def fetchall(self):
         """Like :meth:`ResultProxy.fetchall\

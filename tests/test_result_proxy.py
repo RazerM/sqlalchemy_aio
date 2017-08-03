@@ -20,6 +20,13 @@ async def test_fetchone(engine):
 
 
 @pytest.mark.asyncio(forbid_global_loop=True)
+async def test_fetchmany(engine):
+    result = await engine.execute(select([1]))
+    assert await result.fetchmany() == [(1,)]
+    await result.close()
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_fetchall(engine):
     result = await engine.execute(select([1]))
     assert await result.fetchall() == [(1,)]
@@ -69,3 +76,16 @@ async def test_inserted_primary_key(engine, mytable):
     await engine.execute(CreateTable(mytable))
     result = await engine.execute(mytable.insert())
     assert result.inserted_primary_key == [1]
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_aiter(engine, mytable):
+    await engine.execute(CreateTable(mytable))
+    await engine.execute(mytable.insert())
+    await engine.execute(mytable.insert())
+    result = await engine.execute(select([mytable]))
+    fetched = []
+    async for row in result:
+        fetched.append(row)
+    await engine.execute(mytable.delete())
+    assert len(fetched) == 2
