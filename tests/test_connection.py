@@ -5,6 +5,8 @@ from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio.engine import AsyncioTransaction
 
+# from sqlalchemy_aio.conftest import mytable
+
 
 @pytest.mark.asyncio(forbid_global_loop=True)
 async def test_execute(engine):
@@ -12,6 +14,22 @@ async def test_execute(engine):
     result = await conn.execute(select([1]))
     assert await result.scalar() == 1
     await conn.close()
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_exection_options(engine, mytable):
+    await engine.execute(CreateTable(mytable))
+    await engine.execute(mytable.insert())
+    await engine.execute(mytable.insert())
+    result = await engine.execution_options().execute(select([mytable]))
+    how_many = 0
+    while True:
+        row = await result.fetchone()
+        if not row:
+            break
+        how_many += 1
+    await engine.execute(mytable.delete())
+    assert how_many == 2
 
 
 @pytest.mark.asyncio(forbid_global_loop=True)
