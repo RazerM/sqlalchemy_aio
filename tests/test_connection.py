@@ -19,7 +19,9 @@ async def test_exection_options(engine, mytable):
     await engine.execute(CreateTable(mytable))
     await engine.execute(mytable.insert())
     await engine.execute(mytable.insert())
-    result = await engine.execution_options().execute(select([mytable]))
+    result = await engine \
+        .execution_options(stream_results=True) \
+        .execute(select([mytable]))
     how_many = 0
     while True:
         row = await result.fetchone()
