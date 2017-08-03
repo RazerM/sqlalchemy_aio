@@ -1,5 +1,6 @@
-import pytest
 import asyncio
+
+import pytest
 from sqlalchemy import Column, Integer, MetaData, Table, create_engine, event
 
 from sqlalchemy_aio import ASYNCIO_STRATEGY
@@ -23,8 +24,17 @@ def fix_pysqlite_transactions(engine):
 
 
 @pytest.fixture
-def event_loop():
-    return asyncio.get_event_loop()
+def event_loop(request):
+    """Create an asyncio event loop."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    def teardown():
+        loop.close()
+
+    request.addfinalizer(teardown)
+
+    return loop
 
 
 @pytest.fixture(params=[True, False], ids=['memory', 'file'])
