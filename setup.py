@@ -21,10 +21,10 @@ requires = ['represent>=1.4', 'sqlalchemy']
 
 extras_require = dict()
 
-extras_require['test'] = {
+extras_require['test'] = [
     'pytest >= 3',
     'pytest-asyncio',
-}
+]
 
 
 class PyTest(TestCommand):
