@@ -6,6 +6,7 @@ from functools import partial
 from represent import ReprHelper
 from sqlalchemy import util
 from sqlalchemy.engine import Engine
+from sqlalchemy.engine.base import OptionEngine
 
 
 async def _run_in_executor(_executor, _func, _loop=None, *args, **kwargs):
@@ -24,11 +25,20 @@ class AsyncioEngine:
     """Mostly like :class:`sqlalchemy.engine.Engine` except some of the methods
     are coroutines."""
     def __init__(self, pool, dialect, url, logging_name=None, echo=None,
-                 execution_options=None, loop=None, **kwargs):
+                 execution_options=None, loop=None, engine=None, **kwargs):
+        self._pool = pool
+        self._dialect = dialect
+        self._url = url
+        self._logging_name = logging_name
+        self._echo = echo
+        self._kwargs = kwargs
 
-        self._engine = Engine(
-            pool, dialect, url, logging_name=logging_name, echo=echo,
-            execution_options=execution_options, **kwargs)
+        if engine:
+            self._engine = engine
+        else:
+            self._engine = Engine(
+                pool, dialect, url, logging_name=logging_name, echo=echo,
+                execution_options=execution_options, **kwargs)
 
         self._loop = loop
 
@@ -62,6 +72,23 @@ class AsyncioEngine:
     @property
     def _execution_options(self):
         return self._engine._execution_options
+
+    def execution_options(self, **opt):
+        """Like
+        :meth:`Connection.execute <sqlalchemy.engine.execution_options>`,
+        """
+        ae = AsyncioEngine(
+            pool=self._pool,
+            dialect=self._dialect,
+            url=self._url,
+            logging_name=self._logging_name,
+            echo=self._echo,
+            execution_options=self._execution_options,
+            loop=self._loop,
+            engine=OptionEngine(self._engine, opt),
+            **self._kwargs)
+        ae._engine_executor = self._engine_executor
+        return ae
 
     def _should_log_info(self):
         return self._engine._should_log_info()
@@ -171,6 +198,16 @@ class AsyncioConnection:
     async def _run_in_thread(_self, _func, *args, **kwargs):
         return await _run_in_executor(
             _self._executor, _func, _self._loop, *args, **kwargs)
+
+    def execution_options(self, **opt):
+        """Like
+        :meth:`Connection.execute <sqlalchemy.engine.Connection.execution_options>`,
+        """
+        options_connection = self._connection.execution_options(**opt)
+        return type(self)(
+            connection=options_connection,
+            executor=self._executor,
+            loop=self._loop)
 
     async def execute(self, *args, **kwargs):
         """Like :meth:`Connection.execute <sqlalchemy.engine.Connection.execute>`,
@@ -285,6 +322,22 @@ class AsyncioTransaction:
         return await self._run_in_thread(self._transaction.close)
 
 
+class AsyncioResultProxyIterator:
+    def __init__(self, result_proxy, run_in_thread):
+        self._result_proxy = result_proxy
+        self._run_in_thread = run_in_thread
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        row = await self._run_in_thread(self._result_proxy.fetchone)
+        if row is None:
+            raise StopAsyncIteration()
+        else:
+            return row
+
+
 class AsyncioResultProxy:
     """Mostly like :class:`sqlalchemy.engine.ResultProxy` except some of the
     methods are coroutines.
@@ -293,11 +346,22 @@ class AsyncioResultProxy:
         self._result_proxy = result_proxy
         self._run_in_thread = run_in_thread
 
+    def __aiter__(self):
+        return AsyncioResultProxyIterator(
+            self._result_proxy,
+            self._run_in_thread)
+
     async def fetchone(self):
         """Like :meth:`ResultProxy.fetchone\
         <sqlalchemy.engine.ResultProxy.fetchone>`, but is a coroutine.
         """
         return await self._run_in_thread(self._result_proxy.fetchone)
+
+    async def fetchmany(self, size=None):
+        """Like :meth:`ResultProxy.fetchmany\
+        <sqlalchemy.engine.ResultProxy.fetchmany>`, but is a coroutine.
+        """
+        return await self._run_in_thread(self._result_proxy.fetchmany, size=size)
 
     async def fetchall(self):
         """Like :meth:`ResultProxy.fetchall\

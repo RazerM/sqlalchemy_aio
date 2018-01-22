@@ -15,6 +15,27 @@ async def test_execute(engine):
 
 
 @pytest.mark.asyncio(forbid_global_loop=True)
+async def test_execution_options(engine, mytable):
+    conn = await engine.connect()
+    await conn.execute(CreateTable(mytable))
+    await conn.execute(mytable.insert())
+    await conn.execute(mytable.insert())
+    result = await conn \
+        .execution_options(stream_results=True) \
+        .execute(select([mytable]))
+    how_many = 0
+    while True:
+        row = await result.fetchone()
+        if not row:
+            break
+        how_many += 1
+    await result.close()
+    await conn.execute(mytable.delete())
+    await conn.close()
+    assert how_many == 2
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_scalar(engine):
     async with engine.connect() as conn:
         assert await conn.scalar(select([1])) == 1

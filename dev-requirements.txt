@@ -1,4 +1,4 @@
--e .
+-e .[test]
 invoke
 sphinx
 sphinx-autobuild

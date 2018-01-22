@@ -183,3 +183,22 @@ def test_engine_keywords():
 
 def test_logger(engine):
     assert engine.logger
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_execution_options(engine, mytable):
+    await engine.execute(CreateTable(mytable))
+    await engine.execute(mytable.insert())
+    await engine.execute(mytable.insert())
+    result = await engine \
+        .execution_options(stream_results=True) \
+        .execute(select([mytable]))
+    how_many = 0
+    while True:
+        row = await result.fetchone()
+        if not row:
+            break
+        how_many += 1
+    await result.close()
+    await engine.execute(mytable.delete())
+    assert how_many == 2

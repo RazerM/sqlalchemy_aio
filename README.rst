@@ -51,6 +51,32 @@ Getting started
 
         result = await conn.execute(users.select(users.c.name.startswith('D')))
         d_users = await result.fetchall()
+        #
+        #
+        # or read a single line:
+        #
+        # d_user = await result.fetchone()
+        #
+        #
+        # or ready a group of lines:
+        #
+        # d_some_users = await result.fetchmany()
+        #
+        #
+        # or iter over the results:
+        #
+        # async for d_user in result:
+
+        # set the stream results flag (if supported by the underlying DBAPI)
+        # for large resultsets
+        #
+        # result = await engine \
+        #     .execution_options(stream_results=True) \
+        #     .execute(select([users]))
+        # while True:
+        #     d_user = await result.fetchone()
+        #     if not d_user:
+        #         break
 
         await conn.close()
 
