@@ -1,6 +1,8 @@
 # Change Log
 ## [Unreleased][unreleased]
-N/A
+### Added
+- `AsyncioResultProxy.fetchmany`
+- `AsyncioResultProxy.__aiter__`
 
 ## [0.11.0] - 2017-03-12
 ### Added
