@@ -6,7 +6,7 @@ from sqlalchemy.schema import CreateTable
 from sqlalchemy_aio.engine import AsyncioTransaction
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_execute(engine):
     conn = await engine.connect()
     result = await conn.execute(select([1]))
@@ -14,13 +14,13 @@ async def test_execute(engine):
     await conn.close()
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_scalar(engine):
     async with engine.connect() as conn:
         assert await conn.scalar(select([1])) == 1
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_close(engine):
     conn = await engine.connect()
     assert not conn.closed
@@ -36,7 +36,7 @@ async def test_close(engine):
     assert "This Connection is closed" in str(exc)
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_in_transaction(engine):
     conn = await engine.connect()
     assert not conn.in_transaction()
@@ -51,7 +51,7 @@ async def test_in_transaction(engine):
     await conn.close()
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_transaction_commit(engine, mytable):
     async with engine.connect() as conn:
         trans = await conn.begin()
@@ -69,7 +69,7 @@ async def test_transaction_commit(engine, mytable):
         assert len(rows) == 1
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_transaction_rollback(engine, mytable):
     async with engine.connect() as conn:
         await conn.execute(CreateTable(mytable))
@@ -88,7 +88,7 @@ async def test_transaction_rollback(engine, mytable):
         assert len(rows) == 0
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_transaction_context_manager_success(engine, mytable):
     async with engine.connect() as conn:
         await conn.execute(CreateTable(mytable))
@@ -105,7 +105,7 @@ async def test_transaction_context_manager_success(engine, mytable):
         assert len(rows) == 1
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_transaction_context_manager_failure(engine, mytable):
     async with engine.connect() as conn:
         await conn.execute(CreateTable(mytable))
@@ -125,7 +125,7 @@ async def test_transaction_context_manager_failure(engine, mytable):
         assert len(rows) == 0
 
 
-@pytest.mark.asyncio(forbid_global_loop=True)
+@pytest.mark.asyncio
 async def test_begin_nested(engine, mytable):
     async with engine.connect() as conn:
         await conn.execute(CreateTable(mytable))

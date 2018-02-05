@@ -23,7 +23,7 @@ extras_require = dict()
 
 extras_require['test'] = [
     'pytest >= 3',
-    'pytest-asyncio',
+    'pytest-asyncio >= 0.8',
 ]
 
 
