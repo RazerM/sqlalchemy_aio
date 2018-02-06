@@ -8,3 +8,4 @@ htmlcov/
 .cache/
 .coverage
 .tox/
+.pytest_cache/
