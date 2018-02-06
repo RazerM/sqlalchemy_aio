@@ -5,6 +5,6 @@ __all__ = [
 ]
 
 __author__ = 'Frazer McLean <frazer@frazermclean.co.uk>'
-__version__ = '0.11.0'
+__version__ = '0.12.0'
 __license__ = 'MIT'
 __description__ = 'Asyncio strategy for SQLAlchemy.'
