@@ -71,6 +71,27 @@ Getting started
         loop.run_until_complete(main())
 
 
+What is this?
+-------------
+
+It's *not* an ``asyncio`` implementation of SQLAlchemy or the drivers it uses.
+``sqlalchemy_aio`` lets you use SQLAlchemy by running operations in a separate
+thread.
+
+If you're already using :meth:`run_in_executor` to execute SQLAlchemy tasks,
+``sqlalchemy_aio`` will work well with similar performance. If performance is
+critical, perhaps `asyncpg`_ can help.
+
+.. _asyncpg: https://github.com/MagicStack/asyncpg
+
+Documentation
+-------------
+
+`The documentation`_ has more information, including limitations of the API.
+
+.. _The documentation: https://sqlalchemy-aio.readthedocs.io/en/latest/
+
+
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/sqlalchemy_aio.svg?style=flat-square
    :target: https://pypi.python.org/pypi/sqlalchemy_aio/
 .. |Documentation| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat-square
