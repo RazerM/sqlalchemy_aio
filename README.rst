@@ -78,11 +78,12 @@ It's *not* an ``asyncio`` implementation of SQLAlchemy or the drivers it uses.
 ``sqlalchemy_aio`` lets you use SQLAlchemy by running operations in a separate
 thread.
 
-If you're already using :meth:`run_in_executor` to execute SQLAlchemy tasks,
+If you're already using ```run_in_executor```_ to execute SQLAlchemy tasks,
 ``sqlalchemy_aio`` will work well with similar performance. If performance is
 critical, perhaps `asyncpg`_ can help.
 
 .. _asyncpg: https://github.com/MagicStack/asyncpg
+.. _``run_in_executor``: https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.AbstractEventLoop.run_in_executor
 
 Documentation
 -------------
