@@ -3,8 +3,8 @@ sqlalchemy_aio
 
 |PyPI Version| |Documentation| |Travis| |Coverage| |MIT License|
 
-``sqlalchemy_aio`` adds asyncio support to SQLAlchemy core, derived from
-`alchimia`_.
+``sqlalchemy_aio`` adds asyncio support to SQLAlchemy **core**, derived from
+`alchimia`_. SQLAlchemy ORM is not supported.
 
 .. _alchimia: https://github.com/alex/alchimia
 
