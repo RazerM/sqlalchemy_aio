@@ -6,7 +6,7 @@ class TrioEngine(AsyncEngine):
     """Mostly like :class:`sqlalchemy.engine.Engine` except some of the methods
     are coroutines."""
     def __init__(self, pool, dialect, url, logging_name=None, echo=None,
-                 execution_options=None, loop=None, **kwargs):
+                 execution_options=None, **kwargs):
 
         super().__init__(
             pool, dialect, url, logging_name, echo, execution_options, **kwargs)
