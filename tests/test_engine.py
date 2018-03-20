@@ -5,8 +5,8 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio import ASYNCIO_STRATEGY
-from sqlalchemy_aio.engine import (
-    AsyncioConnection, AsyncioEngine, AsyncioTransaction)
+from sqlalchemy_aio.engine import AsyncioEngine
+from sqlalchemy_aio._base import AsyncConnection, AsyncTransaction
 
 
 def test_create_engine():
@@ -45,21 +45,21 @@ async def test_run_in_thread(engine):
 @pytest.mark.asyncio
 async def test_connect(engine):
     conn = await engine.connect()
-    assert isinstance(conn, AsyncioConnection)
+    assert isinstance(conn, AsyncConnection)
     await conn.close()
 
 
 @pytest.mark.asyncio
 async def test_connect_context_manager(engine):
     async with engine.connect() as conn:
-        assert isinstance(conn, AsyncioConnection)
+        assert isinstance(conn, AsyncConnection)
     assert conn.closed
 
 
 @pytest.mark.asyncio
 async def test_implicit_transaction_success(engine, mytable):
     async with engine.begin() as conn:
-        assert isinstance(conn, AsyncioConnection)
+        assert isinstance(conn, AsyncConnection)
 
         await conn.execute(CreateTable(mytable))
         await conn.execute(mytable.insert())
@@ -79,7 +79,7 @@ async def test_implicit_transaction_failure(engine, mytable):
 
     with pytest.raises(RuntimeError):
         async with engine.begin() as conn:
-            assert isinstance(conn, AsyncioConnection)
+            assert isinstance(conn, AsyncConnection)
 
             await conn.execute(mytable.insert())
             result = await conn.execute(mytable.select())
@@ -99,7 +99,7 @@ async def test_implicit_transaction_commit_failure(engine, mytable):
     # Patch commit to raise an exception. We can then check that a) the
     # transaction is rolled back, and b) that the exception is reraised.
     patch_commit = patch.object(
-        AsyncioTransaction, 'commit', side_effect=RuntimeError)
+        AsyncTransaction, 'commit', side_effect=RuntimeError)
 
     # Patch a coroutine in place of AsyncioTransaction.rollback that calls
     # a Mock which we can later check.
@@ -108,7 +108,7 @@ async def test_implicit_transaction_commit_failure(engine, mytable):
     async def mock_coro(*args, **kwargs):
         mock_rollback(*args, **kwargs)
 
-    patch_rollback = patch.object(AsyncioTransaction, 'rollback', mock_coro)
+    patch_rollback = patch.object(AsyncTransaction, 'rollback', mock_coro)
 
     with pytest.raises(RuntimeError):
         with patch_commit, patch_rollback:
@@ -173,7 +173,7 @@ def test_engine_keywords():
     # echo, logging_name, and execution_options are accepted and then passed on
     # by AsyncioEngine.
 
-    with patch('sqlalchemy_aio.engine.Engine') as mock_engine:
+    with patch('sqlalchemy_aio._base.Engine') as mock_engine:
         create_engine('sqlite://', strategy=ASYNCIO_STRATEGY, echo=True,
                       logging_name='myengine', execution_options=dict())
 

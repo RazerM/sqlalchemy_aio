@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import StatementError
 from sqlalchemy.schema import CreateTable
 
-from sqlalchemy_aio.engine import AsyncioTransaction
+from sqlalchemy_aio._base import AsyncTransaction
 
 
 @pytest.mark.asyncio
@@ -42,7 +42,7 @@ async def test_in_transaction(engine):
     assert not conn.in_transaction()
 
     trans = await conn.begin()
-    assert isinstance(trans, AsyncioTransaction)
+    assert isinstance(trans, AsyncTransaction)
     assert conn.in_transaction()
 
     await trans.close()
@@ -134,7 +134,7 @@ async def test_begin_nested(engine, mytable):
             await conn.execute(mytable.insert())
 
             async with conn.begin_nested() as trans2:
-                assert isinstance(trans2, AsyncioTransaction)
+                assert isinstance(trans2, AsyncTransaction)
                 await conn.execute(mytable.insert())
                 await trans2.rollback()
 

@@ -2,13 +2,13 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.schema import CreateTable
 
-from sqlalchemy_aio.engine import AsyncioResultProxy
+from sqlalchemy_aio._base import AsyncResultProxy
 
 
 @pytest.mark.asyncio
 async def test_result_proxy(engine):
     result = await engine.execute(select([1]))
-    assert isinstance(result, AsyncioResultProxy)
+    assert isinstance(result, AsyncResultProxy)
     await result.close()
 
 
