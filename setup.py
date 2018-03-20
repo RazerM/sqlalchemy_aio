@@ -26,6 +26,10 @@ extras_require['test'] = [
     'pytest-asyncio >= 0.8',
 ]
 
+extras_require['trio'] = [
+    'trio >= 0.3',
+]
+
 
 class PyTest(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
