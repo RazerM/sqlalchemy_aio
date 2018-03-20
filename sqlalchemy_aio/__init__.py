@@ -1,7 +1,8 @@
-from .strategy import ASYNCIO_STRATEGY
+from .strategy import ASYNCIO_STRATEGY, TRIO_STRATEGY
 
 __all__ = [
     'ASYNCIO_STRATEGY',
+    'TRIO_STRATEGY',
 ]
 
 __author__ = 'Frazer McLean <frazer@frazermclean.co.uk>'
