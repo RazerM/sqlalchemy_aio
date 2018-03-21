@@ -21,13 +21,16 @@ requires = ['represent>=1.4', 'sqlalchemy']
 
 extras_require = dict()
 
+trio_req = 'trio >= 0.3'
+
 extras_require['test'] = [
     'pytest >= 3',
     'pytest-asyncio >= 0.8',
+    trio_req,
 ]
 
 extras_require['trio'] = [
-    'trio >= 0.3',
+    trio_req,
 ]
 
 

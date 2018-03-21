@@ -11,11 +11,14 @@ class TrioEngine(AsyncEngine):
         super().__init__(
             pool, dialect, url, logging_name, echo, execution_options, **kwargs)
 
-        self._engine_worker = ThreadWorker()
+        self._engine_worker = None
 
     async def _run_in_thread(_self, _func, *args, **kwargs):
+        if _self._engine_worker is None:
+            _self._engine_worker = ThreadWorker()
+
         return await _self._engine_worker.run(_func, *args, **kwargs)
 
     def _make_connection_thread_fn(self):
         worker = ThreadWorker()
-        return worker.run
+        return worker.run, worker.quit

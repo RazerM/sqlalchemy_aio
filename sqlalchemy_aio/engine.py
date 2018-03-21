@@ -2,7 +2,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
-from ._base import AsyncEngine, _TransactionContextManager
+from ._base import AlreadyQuit, AsyncEngine
 
 
 async def _run_in_executor(_executor, _func, _loop=None, *args, **kwargs):
@@ -45,9 +45,18 @@ class AsyncioEngine(AsyncEngine):
 
     def _make_connection_thread_fn(self):
         executor = ThreadPoolExecutor(max_workers=1)
+        has_quit = False
 
         async def thread_fn(_func, *args, **kwargs):
+            if has_quit:
+                raise AlreadyQuit
+
             return await _run_in_executor(
                 executor, _func, self._loop, *args, **kwargs)
 
-        return thread_fn
+        async def quit_fn():
+            nonlocal has_quit
+            has_quit = True
+            executor.shutdown(wait=False)
+
+        return thread_fn, quit_fn

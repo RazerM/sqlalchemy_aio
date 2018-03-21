@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import Column, Integer, MetaData, Table, create_engine, event
 
-from sqlalchemy_aio import ASYNCIO_STRATEGY
+from sqlalchemy_aio import ASYNCIO_STRATEGY, TRIO_STRATEGY
 
 
 def fix_pysqlite_transactions(engine):
@@ -22,7 +22,7 @@ def fix_pysqlite_transactions(engine):
 
 
 @pytest.fixture(params=[True, False], ids=['memory', 'file'])
-def engine(request, tmpdir, event_loop):
+def engine_url(request, tmpdir):
     # sqlite has different behaviour when used with multiple threads with an
     # in-memory or file database.
     if request.param:
@@ -30,11 +30,21 @@ def engine(request, tmpdir, event_loop):
     else:
         file = tmpdir.join('test.db')
         url = 'sqlite:///' + str(file)
+    return url
 
-    engine = create_engine(url, strategy=ASYNCIO_STRATEGY, loop=event_loop)
+
+@pytest.fixture
+def asyncio_engine(engine_url, event_loop):
+    engine = create_engine(engine_url, strategy=ASYNCIO_STRATEGY, loop=event_loop)
     fix_pysqlite_transactions(engine._engine)
-
     return engine
+
+
+@pytest.fixture
+def trio_engine(engine_url):
+    engine = create_engine(engine_url, strategy=TRIO_STRATEGY)
+    fix_pysqlite_transactions(engine._engine)
+    yield engine
 
 
 @pytest.fixture
