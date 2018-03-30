@@ -70,6 +70,22 @@ Getting started
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
 
+To use the above example with `Trio`_, just change the following:
+
+.. code-block:: python
+
+    import trio
+    from sqlalchemy_aio import TRIO_STRATEGY
+
+    async def main():
+        engine = create_engine('sqlite:///test.db', strategy=TRIO_STRATEGY)
+
+        ...
+
+    trio.run(main)
+
+.. _Trio: https://github.com/python-trio/trio
+
 
 What is this?
 -------------

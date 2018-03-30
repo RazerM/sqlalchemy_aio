@@ -7,10 +7,6 @@ from sqlalchemy.exc import StatementError
 from sqlalchemy import util
 
 
-async def _noop():
-    pass
-
-
 class AlreadyQuit(Exception):
     pass
 
@@ -22,9 +18,17 @@ class AsyncEngine(ABC):
             pool, dialect, url, logging_name=logging_name, echo=echo,
             execution_options=execution_options, **kwargs)
 
+        self._engine_worker = None
+
     @abstractmethod
+    def _make_worker(self):
+        raise NotImplementedError
+
     async def _run_in_thread(_self, _func, *args, **kwargs):
-        pass
+        if _self._engine_worker is None:
+            _self._engine_worker = _self._make_worker()
+
+        return await _self._engine_worker.run(_func, *args, **kwargs)
 
     @property
     def dialect(self):
@@ -64,14 +68,10 @@ class AsyncEngine(ABC):
         """
         return _ConnectionContextManager(self._make_async_connection())
 
-    @abstractmethod
-    def _make_connection_thread_fn(self):
-        pass
-
     async def _make_async_connection(self):
-        run_in_thread, quit_thread = self._make_connection_thread_fn()
-        connection = await run_in_thread(self._engine.connect)
-        return AsyncConnection(connection, run_in_thread, quit_thread)
+        worker = self._make_worker()
+        connection = await worker.run(self._engine.connect)
+        return AsyncConnection(connection, worker.run, worker.quit)
 
     def begin(self, close_with_result=False):
         """Like :meth:`Engine.begin <sqlalchemy.engine.Engine.begin>`, but
@@ -147,7 +147,7 @@ class AsyncConnection:
     def __init__(self, connection, run_in_thread, quit_thread=None):
         self._connection = connection
         self._run_in_thread = run_in_thread
-        self._quit_thread = quit_thread or _noop
+        self._quit_thread = quit_thread
 
     async def execute(self, *args, **kwargs):
         """Like :meth:`Connection.execute <sqlalchemy.engine.Connection.execute>`,
@@ -192,7 +192,8 @@ class AsyncConnection:
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        await self._quit_thread()
+        if self._quit_thread:
+            await self._quit_thread()
         return res
 
     @property
@@ -439,3 +440,13 @@ class _EngineTransactionContextManager:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self._engine._run_in_thread(
             self._context.__exit__, exc_type, exc_val, exc_tb)
+
+
+class ThreadWorker(ABC):
+    @abstractmethod
+    async def run(_self, _func, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def quit(self):
+        raise NotImplementedError

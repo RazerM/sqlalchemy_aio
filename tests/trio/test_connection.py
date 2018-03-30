@@ -4,7 +4,7 @@ from sqlalchemy.exc import StatementError
 from sqlalchemy.schema import CreateTable
 from trio.testing import trio_test
 
-from sqlalchemy_aio._base import AsyncTransaction
+from sqlalchemy_aio.base import AsyncTransaction
 
 
 @trio_test

@@ -1,6 +1,13 @@
 # Change Log
 ## [Unreleased][unreleased]
-N/A
+### Added
+- [Trio] support with `TRIO_STRATEGY`.
+
+### Changed
+- A new `ThreadWorker` class is used internally to defer work to instead
+  of using a `ThreadPoolExecutor`.
+
+[Trio]: https://github.com/python-trio/trio
 
 ## [0.12.0] - 2018-02-06
 ### Added

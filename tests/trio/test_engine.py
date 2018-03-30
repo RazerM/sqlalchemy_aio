@@ -7,7 +7,7 @@ from trio.testing import trio_test
 
 from sqlalchemy_aio import TRIO_STRATEGY
 from sqlalchemy_aio.trio import TrioEngine
-from sqlalchemy_aio._base import AsyncConnection, AsyncTransaction
+from sqlalchemy_aio.base import AsyncConnection, AsyncTransaction
 
 
 def test_create_engine():
@@ -166,7 +166,7 @@ def test_engine_keywords():
     # echo, logging_name, and execution_options are accepted and then passed on
     # by AsyncioEngine.
 
-    with patch('sqlalchemy_aio._base.Engine') as mock_engine:
+    with patch('sqlalchemy_aio.base.Engine') as mock_engine:
         create_engine('sqlite://', strategy=TRIO_STRATEGY, echo=True,
                       logging_name='myengine', execution_options=dict())
 

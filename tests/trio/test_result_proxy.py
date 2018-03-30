@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.schema import CreateTable
 from trio.testing import trio_test
 
-from sqlalchemy_aio._base import AsyncResultProxy
+from sqlalchemy_aio.base import AsyncResultProxy
 
 
 @trio_test
