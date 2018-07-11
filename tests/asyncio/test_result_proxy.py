@@ -4,6 +4,8 @@ from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio.base import AsyncResultProxy
 
+pytestmark = pytest.mark.noextras
+
 
 @pytest.mark.asyncio
 async def test_result_proxy(asyncio_engine):

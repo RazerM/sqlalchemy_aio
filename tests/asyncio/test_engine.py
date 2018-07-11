@@ -8,6 +8,8 @@ from sqlalchemy_aio import ASYNCIO_STRATEGY
 from sqlalchemy_aio.asyncio import AsyncioEngine
 from sqlalchemy_aio.base import AsyncConnection, AsyncTransaction
 
+pytestmark = pytest.mark.noextras
+
 
 def test_create_engine():
     engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY)

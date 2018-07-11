@@ -5,6 +5,8 @@ from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio.base import AsyncTransaction
 
+pytestmark = pytest.mark.noextras
+
 
 @pytest.mark.asyncio
 async def test_execute(asyncio_engine):

@@ -25,16 +25,13 @@ requires = [
 
 extras_require = dict()
 
-trio_req = 'trio >= 0.3'
-
 extras_require['test'] = [
     'pytest >= 3',
     'pytest-asyncio >= 0.8',
-    trio_req,
 ]
 
 extras_require['trio'] = [
-    trio_req,
+    'trio >= 0.3',
 ]
 
 

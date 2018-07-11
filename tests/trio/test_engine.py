@@ -6,8 +6,8 @@ from sqlalchemy.schema import CreateTable
 from trio.testing import trio_test
 
 from sqlalchemy_aio import TRIO_STRATEGY
-from sqlalchemy_aio.trio import TrioEngine
 from sqlalchemy_aio.base import AsyncConnection, AsyncTransaction
+from sqlalchemy_aio.trio import TrioEngine
 
 
 def test_create_engine():
