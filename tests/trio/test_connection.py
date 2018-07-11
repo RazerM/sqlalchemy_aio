@@ -2,12 +2,11 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import StatementError
 from sqlalchemy.schema import CreateTable
-from trio.testing import trio_test
 
 from sqlalchemy_aio.base import AsyncTransaction
 
 
-@trio_test
+@pytest.mark.trio
 async def test_execute(trio_engine):
     conn = await trio_engine.connect()
     result = await conn.execute(select([1]))
@@ -15,13 +14,13 @@ async def test_execute(trio_engine):
     await conn.close()
 
 
-@trio_test
+@pytest.mark.trio
 async def test_scalar(trio_engine):
     async with trio_engine.connect() as conn:
         assert await conn.scalar(select([1])) == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_close(trio_engine):
     conn = await trio_engine.connect()
     assert not conn.closed
@@ -45,7 +44,7 @@ async def test_close(trio_engine):
         await conn.begin_nested()
 
 
-@trio_test
+@pytest.mark.trio
 async def test_in_transaction(trio_engine):
     conn = await trio_engine.connect()
     assert not conn.in_transaction()
@@ -60,7 +59,7 @@ async def test_in_transaction(trio_engine):
     await conn.close()
 
 
-@trio_test
+@pytest.mark.trio
 async def test_transaction_commit(trio_engine, mytable):
     async with trio_engine.connect() as conn:
         trans = await conn.begin()
@@ -78,7 +77,7 @@ async def test_transaction_commit(trio_engine, mytable):
         assert len(rows) == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_transaction_rollback(trio_engine, mytable):
     async with trio_engine.connect() as conn:
         await conn.execute(CreateTable(mytable))
@@ -97,7 +96,7 @@ async def test_transaction_rollback(trio_engine, mytable):
         assert len(rows) == 0
 
 
-@trio_test
+@pytest.mark.trio
 async def test_transaction_context_manager_success(trio_engine, mytable):
     async with trio_engine.connect() as conn:
         await conn.execute(CreateTable(mytable))
@@ -114,7 +113,7 @@ async def test_transaction_context_manager_success(trio_engine, mytable):
         assert len(rows) == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_transaction_context_manager_failure(trio_engine, mytable):
     async with trio_engine.connect() as conn:
         await conn.execute(CreateTable(mytable))
@@ -134,7 +133,7 @@ async def test_transaction_context_manager_failure(trio_engine, mytable):
         assert len(rows) == 0
 
 
-@trio_test
+@pytest.mark.trio
 async def test_begin_nested(trio_engine, mytable):
     async with trio_engine.connect() as conn:
         await conn.execute(CreateTable(mytable))
