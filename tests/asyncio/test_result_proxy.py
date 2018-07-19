@@ -2,7 +2,9 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.schema import CreateTable
 
-from sqlalchemy_aio._base import AsyncResultProxy
+from sqlalchemy_aio.base import AsyncResultProxy
+
+pytestmark = pytest.mark.noextras
 
 
 @pytest.mark.asyncio

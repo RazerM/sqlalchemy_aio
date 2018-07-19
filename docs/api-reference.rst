@@ -1,16 +1,26 @@
 API Reference
 =============
 
-.. currentmodule:: sqlalchemy_aio.engine
+.. currentmodule:: sqlalchemy_aio.base
+
+.. autoclass:: AsyncEngine
+    :members:
+
+.. autoclass:: AsyncConnection
+    :members:
+
+.. autoclass:: AsyncResultProxy
+    :members:
+
+.. autoclass:: AsyncTransaction
+    :members:
+
+.. currentmodule:: sqlalchemy_aio.asyncio
 
 .. autoclass:: AsyncioEngine
     :members:
 
-.. autoclass:: AsyncioConnection
-    :members:
+.. currentmodule:: sqlalchemy_aio.trio
 
-.. autoclass:: AsyncioResultProxy
-    :members:
-
-.. autoclass:: AsyncioTransaction
+.. autoclass:: TrioEngine
     :members:

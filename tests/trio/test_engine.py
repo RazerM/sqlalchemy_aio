@@ -3,11 +3,10 @@ from unittest.mock import Mock, patch
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.schema import CreateTable
-from trio.testing import trio_test
 
 from sqlalchemy_aio import TRIO_STRATEGY
+from sqlalchemy_aio.base import AsyncConnection, AsyncTransaction
 from sqlalchemy_aio.trio import TrioEngine
-from sqlalchemy_aio._base import AsyncConnection, AsyncTransaction
 
 
 def test_create_engine():
@@ -15,13 +14,13 @@ def test_create_engine():
     assert isinstance(engine, TrioEngine)
 
 
-@trio_test
+@pytest.mark.trio
 async def test_implicit_loop():
     engine = create_engine('sqlite://', strategy=TRIO_STRATEGY)
     assert await engine.scalar(select([1])) == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_run_in_thread(trio_engine):
     def fn(*args, **kwargs):
         return args, kwargs
@@ -35,21 +34,21 @@ async def test_run_in_thread(trio_engine):
     assert await trio_engine._run_in_thread(fn, self=1) == ((), {'self': 1})
 
 
-@trio_test
+@pytest.mark.trio
 async def test_connect(trio_engine):
     conn = await trio_engine.connect()
     assert isinstance(conn, AsyncConnection)
     await conn.close()
 
 
-@trio_test
+@pytest.mark.trio
 async def test_connect_context_manager(trio_engine):
     async with trio_engine.connect() as conn:
         assert isinstance(conn, AsyncConnection)
     assert conn.closed
 
 
-@trio_test
+@pytest.mark.trio
 async def test_implicit_transaction_success(trio_engine, mytable):
     async with trio_engine.begin() as conn:
         assert isinstance(conn, AsyncConnection)
@@ -66,7 +65,7 @@ async def test_implicit_transaction_success(trio_engine, mytable):
     assert len(rows) == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_implicit_transaction_failure(trio_engine, mytable):
     await trio_engine.execute(CreateTable(mytable))
 
@@ -87,7 +86,7 @@ async def test_implicit_transaction_failure(trio_engine, mytable):
     assert len(rows) == 0
 
 
-@trio_test
+@pytest.mark.trio
 async def test_implicit_transaction_commit_failure(trio_engine, mytable):
     # Patch commit to raise an exception. We can then check that a) the
     # transaction is rolled back, and b) that the exception is reraised.
@@ -115,32 +114,32 @@ async def test_implicit_transaction_commit_failure(trio_engine, mytable):
     assert mock_rollback.call_count == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_execute(trio_engine):
     result = await trio_engine.execute(select([1]))
     assert await result.scalar() == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_scalar(trio_engine):
     assert await trio_engine.scalar(select([1])) == 1
 
 
-@trio_test
+@pytest.mark.trio
 async def test_has_table(trio_engine, mytable):
     assert not await trio_engine.has_table('mytable')
     await trio_engine.execute(CreateTable(mytable))
     assert await trio_engine.has_table('mytable')
 
 
-@trio_test
+@pytest.mark.trio
 async def test_table_names(trio_engine, mytable):
     assert await trio_engine.table_names() == []
     await trio_engine.execute(CreateTable(mytable))
     assert await trio_engine.table_names() == ['mytable']
 
 
-@trio_test
+@pytest.mark.trio
 async def test_table_names_with_connection(trio_engine, mytable):
     conn = await trio_engine.connect()
 
@@ -166,7 +165,7 @@ def test_engine_keywords():
     # echo, logging_name, and execution_options are accepted and then passed on
     # by AsyncioEngine.
 
-    with patch('sqlalchemy_aio._base.Engine') as mock_engine:
+    with patch('sqlalchemy_aio.base.Engine') as mock_engine:
         create_engine('sqlite://', strategy=TRIO_STRATEGY, echo=True,
                       logging_name='myengine', execution_options=dict())
 

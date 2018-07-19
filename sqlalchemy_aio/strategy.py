@@ -1,6 +1,6 @@
 from sqlalchemy.engine.strategies import DefaultEngineStrategy
 
-from .engine import AsyncioEngine
+from .asyncio import AsyncioEngine
 try:
     from .trio import TrioEngine
 except ImportError:

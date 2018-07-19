@@ -3,7 +3,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import StatementError
 from sqlalchemy.schema import CreateTable
 
-from sqlalchemy_aio._base import AsyncTransaction
+from sqlalchemy_aio.base import AsyncTransaction
+
+pytestmark = pytest.mark.noextras
 
 
 @pytest.mark.asyncio

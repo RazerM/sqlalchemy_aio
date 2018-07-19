@@ -5,8 +5,10 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio import ASYNCIO_STRATEGY
-from sqlalchemy_aio.engine import AsyncioEngine
-from sqlalchemy_aio._base import AsyncConnection, AsyncTransaction
+from sqlalchemy_aio.asyncio import AsyncioEngine
+from sqlalchemy_aio.base import AsyncConnection, AsyncTransaction
+
+pytestmark = pytest.mark.noextras
 
 
 def test_create_engine():
@@ -173,7 +175,7 @@ def test_engine_keywords():
     # echo, logging_name, and execution_options are accepted and then passed on
     # by AsyncioEngine.
 
-    with patch('sqlalchemy_aio._base.Engine') as mock_engine:
+    with patch('sqlalchemy_aio.base.Engine') as mock_engine:
         create_engine('sqlite://', strategy=ASYNCIO_STRATEGY, echo=True,
                       logging_name='myengine', execution_options=dict())
 

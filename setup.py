@@ -17,20 +17,22 @@ DESCRIPTION = metadata['description']
 
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
-requires = ['represent>=1.4', 'sqlalchemy']
+requires = [
+    'represent>=1.4',
+    'sqlalchemy',
+    'outcome',
+]
 
 extras_require = dict()
-
-trio_req = 'trio >= 0.3'
 
 extras_require['test'] = [
     'pytest >= 3',
     'pytest-asyncio >= 0.8',
-    trio_req,
+    'pytest-trio >= 0.4.1',
 ]
 
 extras_require['trio'] = [
-    trio_req,
+    'trio >= 0.3',
 ]
 
 
