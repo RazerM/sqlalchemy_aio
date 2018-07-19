@@ -2,8 +2,8 @@ import trio
 import threading
 from functools import partial
 
+import outcome
 from trio import Cancelled, RunFinishedError
-from trio.hazmat import Result
 
 from .base import AlreadyQuit, AsyncEngine, ThreadWorker
 
@@ -29,7 +29,7 @@ class TrioThreadWorker(ThreadWorker):
                 break
 
             if request is not _STOP:
-                response = Result.capture(request)
+                response = outcome.capture(request)
                 self._portal.run(self._response_queue.put, response)
             else:
                 self._portal.run(self._response_queue.put, None)
