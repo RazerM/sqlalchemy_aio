@@ -3,10 +3,11 @@ sqlalchemy_aio
 
 |PyPI Version| |Documentation| |Travis| |Coverage| |MIT License|
 
-``sqlalchemy_aio`` adds asyncio support to SQLAlchemy core, derived from
-`alchimia`_.
+``sqlalchemy_aio`` adds asyncio and `Trio`_ support to SQLAlchemy core, derived
+from `alchimia`_.
 
 .. _alchimia: https://github.com/alex/alchimia
+.. _Trio: https://github.com/python-trio/trio
 
 
 Getting started
@@ -70,6 +71,9 @@ Getting started
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
 
+Getting started with Trio
+-------------------------
+
 To use the above example with `Trio`_, just change the following:
 
 .. code-block:: python
@@ -83,9 +87,6 @@ To use the above example with `Trio`_, just change the following:
         ...
 
     trio.run(main)
-
-.. _Trio: https://github.com/python-trio/trio
-
 
 What is this?
 -------------
