@@ -35,7 +35,7 @@ N/A
 Initial release.
 
 [unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.13.0...HEAD
-[0.12.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.12.0...0.13.0
+[0.13.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.10.0...0.11.0
 [0.10.0]: https://github.com/RazerM/sqlalchemy_aio/compare/458d37d8...0.10.0
