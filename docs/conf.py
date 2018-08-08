@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'sqlalchemy_aio'
-copyright = '2016, Frazer McLean, Alex Gaynor, and David Reid'
+copyright = '2018, Frazer McLean, Alex Gaynor, and David Reid'
 author = 'Frazer McLean'
 
 # The version info for the project you're documenting, acts as replacement for
