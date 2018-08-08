@@ -60,6 +60,9 @@ async def test_connect_context_manager(asyncio_engine):
 
 @pytest.mark.asyncio
 async def test_implicit_transaction_success(asyncio_engine, mytable):
+    if ':memory:' in str(asyncio_engine._engine.url):
+        pytest.skip(":memory: connections don't persist across threads")
+
     async with asyncio_engine.begin() as conn:
         assert isinstance(conn, AsyncConnection)
 
@@ -77,6 +80,9 @@ async def test_implicit_transaction_success(asyncio_engine, mytable):
 
 @pytest.mark.asyncio
 async def test_implicit_transaction_failure(asyncio_engine, mytable):
+    if ':memory:' in str(asyncio_engine._engine.url):
+            pytest.skip(":memory: connections don't persist across threads")
+
     await asyncio_engine.execute(CreateTable(mytable))
 
     with pytest.raises(RuntimeError):

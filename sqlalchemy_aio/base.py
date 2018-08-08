@@ -69,7 +69,7 @@ class AsyncEngine(ABC):
     async def _make_async_connection(self):
         worker = self._make_worker()
         connection = await worker.run(self._engine.connect)
-        return AsyncConnection(connection, worker.run, worker.quit)
+        return AsyncConnection(connection, worker, self)
 
     def begin(self, close_with_result=False):
         """Like :meth:`Engine.begin <sqlalchemy.engine.Engine.begin>`, but
@@ -126,7 +126,7 @@ class AsyncEngine(ABC):
         run_in_thread = self._run_in_thread
 
         if connection is not None:
-            run_in_thread = connection._run_in_thread
+            run_in_thread = connection._worker.run
             connection = connection._connection
 
         return await run_in_thread(self._engine.table_names, schema, connection)
@@ -142,15 +142,10 @@ class AsyncConnection:
     """Mostly like :class:`sqlalchemy.engine.Connection` except some of the
     methods are coroutines.
     """
-    def __init__(self, connection, run_in_thread, quit_thread=None):
+    def __init__(self, connection, worker, engine):
         self._connection = connection
-        self._run_in_thread = run_in_thread
-
-        if quit_thread is None:
-            async def quit_thread():
-                pass
-
-        self._quit_thread = quit_thread
+        self._worker = worker
+        self._engine_ref = weakref.ref(engine)
 
     async def execute(self, *args, **kwargs):
         """Like :meth:`Connection.execute <sqlalchemy.engine.Connection.execute>`,
@@ -171,12 +166,12 @@ class AsyncConnection:
             in a different thread.
         """
         try:
-            rp = await self._run_in_thread(
+            rp = await self._worker.run(
                 self._connection.execute, *args, **kwargs)
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        return AsyncResultProxy(rp, self._run_in_thread)
+        return AsyncResultProxy(rp, self._worker.run)
 
     async def scalar(self, *args, **kwargs):
         """Like :meth:`Connection.scalar <sqlalchemy.engine.Connection.scalar>`,
@@ -190,9 +185,9 @@ class AsyncConnection:
         but is a coroutine.
         """
         try:
-            res = await self._run_in_thread(
+            res = await self._worker.run(
                 self._connection.close, *args, **kwargs)
-            await self._quit_thread()
+            await self._worker.quit()
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
@@ -228,11 +223,11 @@ class AsyncConnection:
 
     async def _begin(self):
         try:
-            transaction = await self._run_in_thread(self._connection.begin)
+            transaction = await self._worker.run(self._connection.begin)
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        return AsyncTransaction(transaction, self._run_in_thread)
+        return AsyncTransaction(transaction, self._worker.run)
 
     def begin_nested(self):
         """Like :meth:`Connection.begin_nested\
@@ -245,11 +240,11 @@ class AsyncConnection:
 
     async def _begin_nested(self):
         try:
-            transaction = await self._run_in_thread(self._connection.begin_nested)
+            transaction = await self._worker.run(self._connection.begin_nested)
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        return AsyncTransaction(transaction, self._run_in_thread)
+        return AsyncTransaction(transaction, self._worker.run)
 
     def in_transaction(self):
         """Like the :attr:`Connection.in_transaction\
@@ -426,21 +421,22 @@ class _TransactionContextManager(_BaseContextManager):
 
 
 class _EngineTransactionContextManager:
-    __slots__ = ('_engine', '_close_with_result', '_context')
+    __slots__ = ('_engine', '_close_with_result', '_context', '_worker')
 
     def __init__(self, engine: AsyncEngine, close_with_result):
         self._engine = engine
         self._close_with_result = close_with_result
+        self._worker = self._engine._make_worker()
 
     async def __aenter__(self):
-        self._context = await self._engine._run_in_thread(
+        self._context = await self._worker.run(
             self._engine._engine.begin, self._close_with_result)
 
-        return AsyncConnection(
-            self._context.__enter__(), self._engine._run_in_thread)
+        conn = await self._worker.run(self._context.__enter__)
+        return AsyncConnection(conn, self._worker, self._engine)
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        return await self._engine._run_in_thread(
+        return await self._worker.run(
             self._context.__exit__, exc_type, exc_val, exc_tb)
 
 

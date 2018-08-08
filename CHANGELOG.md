@@ -3,6 +3,8 @@
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.
   This is only called internally.
+- Connections created using `AsyncEngine.begin` now create their own
+  worker, like `AsyncEngine.connect`.
 
 ## [0.13.0][0.13.0]
 ### Added

@@ -50,6 +50,9 @@ async def test_connect_context_manager(trio_engine):
 
 @pytest.mark.trio
 async def test_implicit_transaction_success(trio_engine, mytable):
+    if ':memory:' in str(trio_engine._engine.url):
+            pytest.skip(":memory: connections don't persist across threads")
+
     async with trio_engine.begin() as conn:
         assert isinstance(conn, AsyncConnection)
 
@@ -67,6 +70,9 @@ async def test_implicit_transaction_success(trio_engine, mytable):
 
 @pytest.mark.trio
 async def test_implicit_transaction_failure(trio_engine, mytable):
+    if ':memory:' in str(trio_engine._engine.url):
+                pytest.skip(":memory: connections don't persist across threads")
+
     await trio_engine.execute(CreateTable(mytable))
 
     with pytest.raises(RuntimeError):
