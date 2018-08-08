@@ -16,8 +16,8 @@ class TrioThreadWorker(ThreadWorker):
         self._portal = trio.BlockingTrioPortal()
         self._request_queue = trio.Queue(1)
         self._response_queue = trio.Queue(1)
-        thread = threading.Thread(target=self.thread_fn, daemon=True)
-        thread.start()
+        self._thread = threading.Thread(target=self.thread_fn, daemon=True)
+        self._thread.start()
         self._has_quit = False
 
     def thread_fn(self):
