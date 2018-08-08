@@ -1,6 +1,8 @@
 # Change Log
 ## [Unreleased][unreleased]
-N/A
+### Fixed
+- `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.
+  This is only called internally.
 
 ## [0.13.0][0.13.0]
 ### Added

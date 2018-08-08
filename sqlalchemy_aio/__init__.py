@@ -1,3 +1,4 @@
+from .exc import AlreadyQuit
 from .strategy import ASYNCIO_STRATEGY, TRIO_STRATEGY
 
 __all__ = [

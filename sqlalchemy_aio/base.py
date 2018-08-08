@@ -145,6 +145,11 @@ class AsyncConnection:
     def __init__(self, connection, run_in_thread, quit_thread=None):
         self._connection = connection
         self._run_in_thread = run_in_thread
+
+        if quit_thread is None:
+            async def quit_thread():
+                pass
+
         self._quit_thread = quit_thread
 
     async def execute(self, *args, **kwargs):
@@ -187,11 +192,10 @@ class AsyncConnection:
         try:
             res = await self._run_in_thread(
                 self._connection.close, *args, **kwargs)
+            await self._quit_thread()
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        if self._quit_thread:
-            await self._quit_thread()
         return res
 
     @property

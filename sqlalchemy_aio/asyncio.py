@@ -12,7 +12,7 @@ _STOP = object()
 
 
 class AsyncioThreadWorker(ThreadWorker):
-    def __init__(self, loop):
+    def __init__(self, loop=None):
         if loop is None:
             loop = asyncio.get_event_loop()
 
@@ -54,6 +54,9 @@ class AsyncioThreadWorker(ThreadWorker):
         return resp.unwrap()
 
     async def quit(self):
+        if self._has_quit:
+            raise AlreadyQuit
+
         self._has_quit = True
         await self._request_queue.put(_STOP)
         await self._response_queue.get()

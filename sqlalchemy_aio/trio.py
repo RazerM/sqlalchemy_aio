@@ -47,6 +47,9 @@ class TrioThreadWorker(ThreadWorker):
         return resp.unwrap()
 
     async def quit(self):
+        if self._has_quit:
+            raise AlreadyQuit
+
         self._has_quit = True
         await self._request_queue.put(_STOP)
         await self._response_queue.get()
