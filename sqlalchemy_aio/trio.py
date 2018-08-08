@@ -5,7 +5,8 @@ from functools import partial
 import outcome
 from trio import Cancelled, RunFinishedError
 
-from .base import AlreadyQuit, AsyncEngine, ThreadWorker
+from .base import AsyncEngine, ThreadWorker
+from .exc import AlreadyQuit
 
 _STOP = object()
 

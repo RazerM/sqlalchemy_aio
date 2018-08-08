@@ -1,0 +1,2 @@
+class AlreadyQuit(Exception):
+    pass

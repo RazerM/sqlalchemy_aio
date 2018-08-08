@@ -6,9 +6,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import StatementError
 from sqlalchemy import util
 
-
-class AlreadyQuit(Exception):
-    pass
+from .exc import AlreadyQuit
 
 
 class AsyncEngine(ABC):
