@@ -203,3 +203,23 @@ async def test_run_visitor_exception(trio_engine, mytable):
     async with trio_engine.connect() as conn:
         await conn._worker.run(thread_fn, conn)
         assert thread_called
+
+
+@pytest.mark.trio
+async def test_sync_cm_exception(trio_engine):
+    thread_called = False
+
+    def thread_fn(conn):
+        nonlocal thread_called
+
+        meta = MetaData()
+        with pytest.raises(TypeError, match='Use async with'):
+            meta.reflect(conn)
+
+        meta.reflect(conn.sync_connection)
+
+        thread_called = True
+
+    async with trio_engine.connect() as conn:
+        await conn._worker.run(thread_fn, conn)
+        assert thread_called

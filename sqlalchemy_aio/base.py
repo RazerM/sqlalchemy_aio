@@ -191,6 +191,10 @@ class AsyncConnection:
         self._engine_ref = weakref.ref(engine)
 
     @property
+    def _engine(self):
+        return self._engine_ref()
+
+    @property
     def sync_connection(self):
         """Public property of the underlying SQLAlchemy connection."""
         return self._connection
@@ -224,6 +228,17 @@ class AsyncConnection:
             raise StatementError("This Connection is closed.", None, None, None)
 
         return AsyncResultProxy(rp, self._worker.run)
+
+    def connect(self):
+        """Like :meth:`Connection.connect <sqlalchemy.engine.Connection.connect>`,
+        but is a coroutine.
+        """
+        return _ConnectionContextManager(self._make_async_connection())
+
+    async def _make_async_connection(self):
+        worker = self._engine._make_worker()
+        connection = await worker.run(self._connection.connect)
+        return AsyncConnection(connection, worker, self._engine)
 
     async def scalar(self, *args, **kwargs):
         """Like :meth:`Connection.scalar <sqlalchemy.engine.Connection.scalar>`,
@@ -489,6 +504,18 @@ class _BaseContextManager(Coroutine):
     async def __aenter__(self):
         self._result = await self._coro
         return self._result
+
+    def __enter__(self):
+        raise TypeError(
+            'Use async with instead. This error can occur when trying to '
+            'pass the AsyncEngine to something that expects a normal engine, '
+            'e.g. MetaData.reflect(). You can use engine.sync_engine, but be '
+            'aware that the function will block. You should run it in a '
+            'separate thread. See also connection.sync_connection'
+        )
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 class _ConnectionContextManager(_BaseContextManager):

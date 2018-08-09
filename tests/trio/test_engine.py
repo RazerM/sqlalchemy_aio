@@ -208,3 +208,12 @@ async def test_run_visitor_exception(asyncio_engine, mytable):
         mytable.create(asyncio_engine)
 
     mytable.create(asyncio_engine.sync_engine)
+
+
+@pytest.mark.asyncio
+async def test_sync_cm_exception(asyncio_engine):
+    meta = MetaData()
+    with pytest.raises(TypeError, match='Use async with'):
+        meta.reflect(asyncio_engine)
+
+    meta.reflect(asyncio_engine.sync_engine)

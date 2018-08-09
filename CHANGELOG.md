@@ -8,7 +8,10 @@
   `AsyncConnection` and `AsyncEngine`. This allows
   `Table(..., autoload_with=engine)`, which emits a `BlockingWarning`.
 - Detects attempts to use `Table().create(bind=engine)` or
-  `MetaData().create_all` and raise a helpful error message.
+  `MetaData().create_all` and raises a helpful error message.
+- Detects attempts to use `MetData().reflect` and raises a helpful
+  error message.
+- `AsyncConnection.connect` method.
 
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.
