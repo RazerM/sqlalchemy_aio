@@ -2,6 +2,8 @@
 ## [Unreleased][unreleased]
 ### Added
 - `AsyncConnection.dialect` property.
+- `AsyncEngine.sync_engine` property.
+- `AsyncConnection.sync_connection`property.
 
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.

@@ -47,6 +47,11 @@ class AsyncEngine(ABC):
     def _should_log_info(self):
         return self._engine._should_log_info()
 
+    @property
+    def sync_engine(self):
+        """Public property of the underlying SQLAlchemy engine."""
+        return self._engine
+
     def connect(self):
         """Like :meth:`Engine.connect <sqlalchemy.engine.Engine.connect>`, but
         returns an awaitable that can also be used as an asynchronous context
@@ -146,6 +151,11 @@ class AsyncConnection:
         self._connection = connection
         self._worker = worker
         self._engine_ref = weakref.ref(engine)
+
+    @property
+    def sync_connection(self):
+        """Public property of the underlying SQLAlchemy connection."""
+        return self._connection
 
     @property
     def dialect(self):
