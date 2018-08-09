@@ -1,3 +1,4 @@
+import warnings
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Coroutine
@@ -7,7 +8,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import StatementError
 from sqlalchemy import util
 
-from .exc import AlreadyQuit
+from .exc import AlreadyQuit, BlockingWarning
 
 
 class AsyncEngine(ABC):
@@ -136,6 +137,28 @@ class AsyncEngine(ABC):
             connection = connection._connection
 
         return await run_in_thread(self._engine.table_names, schema, connection)
+
+    def run_callable(self, callable_, *args, **kwargs):
+        """Like :meth:`Engine.run_callable\
+        <sqlalchemy.engine.Engine.run_callable>`.
+
+        .. warning::
+
+            This method blocks. It exists so that we can warn the user if
+            they try to use an async engine for table reflection:
+
+            .. code-block:: python
+
+                Table(..., autoload_with=engine)
+        """
+        warnings.warn(
+            'The AsyncEngine has been called in a blocking fashion, e.g. with '
+            'Table(..., autoload_with=engine). You may wish to run it in a '
+            'separate thread to avoid blocking the event loop. You can use '
+            'Table(..., autoload_with=engine.sync_engine) to opt out of the '
+            'warning for this blocking behaviour.',
+            BlockingWarning)
+        self._engine.run_callable(callable_, *args, **kwargs)
 
     def __repr__(self):
         r = ReprHelper(self)
@@ -266,6 +289,28 @@ class AsyncConnection:
         <sqlalchemy.engine.Connection.in_transaction>` attribute.
         """
         return self._connection.in_transaction()
+
+    def run_callable(self, callable_, *args, **kwargs):
+        """Like :meth:`Connection.run_callable\
+        <sqlalchemy.engine.Connection.run_callable>`.
+
+        .. warning::
+
+            This method blocks. It exists so that we can warn the user if
+            they try to use an async connection for table reflection:
+
+            .. code-block:: python
+
+                Table(..., autoload_with=connection)
+        """
+        warnings.warn(
+            'The AsyncConnection has been called in a blocking fashion, e.g. '
+            'with Table(..., autoload_with=connection). You may wish to run it '
+            'in a separate thread to avoid blocking the event loop. You can '
+            'use Table(..., autoload_with=connection.sync_connection) to opt '
+            'out of the warning for this blocking behaviour.',
+            BlockingWarning)
+        self._connection.run_callable(callable_, *args, **kwargs)
 
 
 class AsyncTransaction:

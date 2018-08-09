@@ -24,3 +24,11 @@ API Reference
 
 .. autoclass:: TrioEngine
     :members:
+
+.. currentmodule:: sqlalchemy_aio.exc
+
+.. autoclass:: AlreadyQuit
+    :members:
+
+.. autoclass:: BlockingWarning
+    :members:

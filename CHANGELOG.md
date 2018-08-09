@@ -4,6 +4,9 @@
 - `AsyncConnection.dialect` property.
 - `AsyncEngine.sync_engine` property.
 - `AsyncConnection.sync_connection`property.
+- Blocking method `run_callable` has been implemented for
+  `AsyncConnection` and `AsyncEngine`. This allows
+  `Table(..., autoload_with=engine)`, which emits a `BlockingWarning`.
 
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.

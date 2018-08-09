@@ -1,9 +1,12 @@
+from contextlib import suppress
+
 import pytest
-from sqlalchemy import select
-from sqlalchemy.exc import StatementError
+from sqlalchemy import MetaData, Table, select
+from sqlalchemy.exc import NoSuchTableError, StatementError
 from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio.base import AsyncTransaction
+from sqlalchemy_aio.exc import BlockingWarning
 
 
 @pytest.mark.trio
@@ -151,3 +154,33 @@ async def test_begin_nested(trio_engine, mytable):
         result = await conn.execute(mytable.select())
         rows = await result.fetchall()
         assert len(rows) == 1
+
+
+@pytest.mark.trio
+async def test_run_callable_warning(trio_engine):
+    meta = MetaData()
+    thread_called = False
+
+    # we must use sqlite connections in the same thread they were created in,
+    # hence the indirection here.
+
+    def thread_fn(conn):
+        nonlocal thread_called
+
+        with pytest.warns(BlockingWarning, match='sync_connection') as record:
+            with suppress(NoSuchTableError):
+                Table('sometable', meta, autoload_with=conn)
+
+        assert len(record) == 1
+
+        with pytest.warns(None) as record:
+            with suppress(NoSuchTableError):
+                Table('sometable', meta, autoload_with=conn.sync_connection)
+
+        assert len(record) == 0
+
+        thread_called = True
+
+    async with trio_engine.connect() as conn:
+        await conn._worker.run(thread_fn, conn)
+        assert thread_called

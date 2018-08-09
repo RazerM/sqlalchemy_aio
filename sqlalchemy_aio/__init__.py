@@ -1,4 +1,4 @@
-from .exc import AlreadyQuit
+from .exc import AlreadyQuit, BlockingWarning
 from .strategy import ASYNCIO_STRATEGY, TRIO_STRATEGY
 
 __all__ = [

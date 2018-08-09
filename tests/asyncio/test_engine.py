@@ -1,12 +1,15 @@
-from unittest.mock import Mock, call, patch
+from contextlib import suppress
+from unittest.mock import Mock, patch
 
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import MetaData, Table, create_engine, select
+from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.schema import CreateTable
 
 from sqlalchemy_aio import ASYNCIO_STRATEGY
 from sqlalchemy_aio.asyncio import AsyncioEngine
 from sqlalchemy_aio.base import AsyncConnection, AsyncTransaction
+from sqlalchemy_aio.exc import BlockingWarning
 
 pytestmark = pytest.mark.noextras
 
@@ -191,3 +194,19 @@ def test_engine_keywords():
 
 def test_logger(asyncio_engine):
     assert asyncio_engine.logger
+
+
+@pytest.mark.asyncio
+async def test_run_callable_warning(asyncio_engine):
+    meta = MetaData()
+    with pytest.warns(BlockingWarning, match='sync_engine') as record:
+        with suppress(NoSuchTableError):
+            Table('sometable', meta, autoload_with=asyncio_engine)
+
+    assert len(record) == 1
+
+    with pytest.warns(None) as record:
+        with suppress(NoSuchTableError):
+            Table('sometable', meta, autoload_with=asyncio_engine.sync_engine)
+
+    assert len(record) == 0
