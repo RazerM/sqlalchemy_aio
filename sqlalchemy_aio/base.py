@@ -166,6 +166,20 @@ class AsyncEngine(ABC):
         r.positional_from_attr('_engine')
         return str(r)
 
+    def __getattr__(self, item):
+        msg = '{!r} object has no attribute {!r}.'.format(
+            self.__class__.__name__, item)
+
+        if item == '_run_visitor':
+            raise AttributeError(
+                msg + ' Did you try to use Table.create(engine) or similar? '
+                'You must use Table.create(engine.sync_engine) instead, which'
+                'is a blocking function. Consider using sqlalchemy.schema.'
+                'CreateTable instead'
+            )
+
+        raise AttributeError(msg)
+
 
 class AsyncConnection:
     """Mostly like :class:`sqlalchemy.engine.Connection` except some of the
@@ -311,6 +325,20 @@ class AsyncConnection:
             'out of the warning for this blocking behaviour.',
             BlockingWarning)
         self._connection.run_callable(callable_, *args, **kwargs)
+
+    def __getattr__(self, item):
+        msg = '{!r} object has no attribute {!r}.'.format(
+            self.__class__.__name__, item)
+
+        if item == '_run_visitor':
+            raise AttributeError(
+                msg + ' Did you try to use Table.create(connection) or '
+                'similar? You must use Table.create(connection.sync_connection'
+                ') instead, which is a blocking function. Consider using '
+                'sqlalchemy.schema.CreateTable instead.'
+            )
+
+        raise AttributeError(msg)
 
 
 class AsyncTransaction:

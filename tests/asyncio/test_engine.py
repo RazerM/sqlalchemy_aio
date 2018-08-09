@@ -210,3 +210,11 @@ async def test_run_callable_warning(asyncio_engine):
             Table('sometable', meta, autoload_with=asyncio_engine.sync_engine)
 
     assert len(record) == 0
+
+
+@pytest.mark.asyncio
+async def test_run_visitor_exception(asyncio_engine, mytable):
+    with pytest.raises(AttributeError, match='Did you try to use'):
+        mytable.create(asyncio_engine)
+
+    mytable.create(asyncio_engine.sync_engine)

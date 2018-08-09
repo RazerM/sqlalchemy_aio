@@ -184,3 +184,22 @@ async def test_run_callable_warning(trio_engine):
     async with trio_engine.connect() as conn:
         await conn._worker.run(thread_fn, conn)
         assert thread_called
+
+
+@pytest.mark.trio
+async def test_run_visitor_exception(trio_engine, mytable):
+    thread_called = False
+
+    def thread_fn(conn):
+        nonlocal thread_called
+
+        with pytest.raises(AttributeError, match='Did you try to use'):
+            mytable.create(conn)
+
+        mytable.create(conn.sync_connection)
+
+        thread_called = True
+
+    async with trio_engine.connect() as conn:
+        await conn._worker.run(thread_fn, conn)
+        assert thread_called

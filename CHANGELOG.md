@@ -7,6 +7,8 @@
 - Blocking method `run_callable` has been implemented for
   `AsyncConnection` and `AsyncEngine`. This allows
   `Table(..., autoload_with=engine)`, which emits a `BlockingWarning`.
+- Detects attempts to use `Table().create(bind=engine)` or
+  `MetaData().create_all` and raise a helpful error message.
 
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.
