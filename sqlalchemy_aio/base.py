@@ -147,6 +147,10 @@ class AsyncConnection:
         self._worker = worker
         self._engine_ref = weakref.ref(engine)
 
+    @property
+    def dialect(self):
+        return self._connection.dialect
+
     async def execute(self, *args, **kwargs):
         """Like :meth:`Connection.execute <sqlalchemy.engine.Connection.execute>`,
         but is a coroutine that returns an :class:`AsyncioResultProxy`.

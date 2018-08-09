@@ -1,5 +1,8 @@
 # Change Log
 ## [Unreleased][unreleased]
+### Added
+- `AsyncConnection.dialect` property.
+
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.
   This is only called internally.
