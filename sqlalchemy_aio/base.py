@@ -299,8 +299,8 @@ class AsyncConnection:
         return AsyncTransaction(transaction, self._worker.run)
 
     def in_transaction(self):
-        """Like the :attr:`Connection.in_transaction\
-        <sqlalchemy.engine.Connection.in_transaction>` attribute.
+        """Like :meth:`Connection.in_transaction\
+        <sqlalchemy.engine.Connection.in_transaction>`.
         """
         return self._connection.in_transaction()
 
