@@ -12,6 +12,8 @@
 - Detects attempts to use `MetData().reflect()` and raises a helpful
   error message.
 - `AsyncConnection.connect()` method.
+- Public `run_in_thread()` async method has been added to `AsyncConnection`
+  and `AsyncEngine`.
 
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.

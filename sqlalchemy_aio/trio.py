@@ -36,14 +36,17 @@ class TrioThreadWorker(ThreadWorker):
                 self._portal.run(self._response_queue.put, None)
                 break
 
-    async def run(_self, _func, *args, **kwargs):
-        if _self._has_quit:
+    async def run(self, func, args=(), kwargs=None):
+        if self._has_quit:
             raise AlreadyQuit
 
-        if args or kwargs:
-            _func = partial(_func, *args, **kwargs)
-        await _self._request_queue.put(_func)
-        resp = await _self._response_queue.get()
+        if kwargs:
+            func = partial(func, *args, **kwargs)
+        elif args:
+            func = partial(func, *args)
+
+        await self._request_queue.put(func)
+        resp = await self._response_queue.get()
         return resp.unwrap()
 
     async def quit(self):

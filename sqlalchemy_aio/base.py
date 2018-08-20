@@ -25,10 +25,39 @@ class AsyncEngine(ABC):
         raise NotImplementedError
 
     async def _run_in_thread(_self, _func, *args, **kwargs):
+        """Unlike the public-facing `run_in_thread` method, we want this one
+        to let us call SQLAlchemy methods like normal internally.
+        """
         if _self._engine_worker is None:
             _self._engine_worker = _self._make_worker()
 
-        return await _self._engine_worker.run(_func, *args, **kwargs)
+        return await _self._engine_worker.run(_func, args, kwargs)
+
+    async def run_in_thread(self, func, *args):
+        """Run a synchronous function in the engine's worker thread.
+
+        Example:
+            The following blocking function:
+
+            .. code-block:: python
+
+                some_fn(engine.sync_engine)
+
+            can be called like this instead:
+
+            .. code-block:: python
+
+                await engine.run_in_thread(some_fn, engine.sync_engine)
+
+        Parameters:
+            func: A synchronous function.
+            args: Positional arguments to be passed to `func`. If you need to
+                pass keyword arguments, then use :func:`functools.partial`.
+        """
+        if self._engine_worker is None:
+            self._engine_worker = self._make_worker()
+
+        return await self._engine_worker.run(func, args)
 
     @property
     def dialect(self):
@@ -133,7 +162,7 @@ class AsyncEngine(ABC):
         run_in_thread = self._run_in_thread
 
         if connection is not None:
-            run_in_thread = connection._worker.run
+            run_in_thread = connection._run_in_thread
             connection = connection._connection
 
         return await run_in_thread(self._engine.table_names, schema, connection)
@@ -190,6 +219,32 @@ class AsyncConnection:
         self._worker = worker
         self._engine_ref = weakref.ref(engine)
 
+    async def _run_in_thread(_self, _func, *args, **kwargs):
+        return await _self._worker.run(_func, args, kwargs)
+
+    async def run_in_thread(self, func, *args):
+        """Run a synchronous function in the connection's worker thread.
+
+        Example:
+            The following blocking function:
+
+            .. code-block:: python
+
+                some_fn(conn.sync_connection)
+
+            can be called like this instead:
+
+            .. code-block:: python
+
+                await engine.run_in_thread(some_fn, conn.sync_connection)
+
+        Parameters:
+            func: A synchronous function.
+            args: Positional arguments to be passed to `func`. If you need to
+                pass keyword arguments, then use :func:`functools.partial`.
+        """
+        return await self._worker.run(func, args)
+
     @property
     def _engine(self):
         return self._engine_ref()
@@ -222,12 +277,12 @@ class AsyncConnection:
             in a different thread.
         """
         try:
-            rp = await self._worker.run(
+            rp = await self._run_in_thread(
                 self._connection.execute, *args, **kwargs)
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        return AsyncResultProxy(rp, self._worker.run)
+        return AsyncResultProxy(rp, self._run_in_thread)
 
     def connect(self):
         """Like :meth:`Connection.connect <sqlalchemy.engine.Connection.connect>`,
@@ -252,7 +307,7 @@ class AsyncConnection:
         but is a coroutine.
         """
         try:
-            res = await self._worker.run(
+            res = await self._run_in_thread(
                 self._connection.close, *args, **kwargs)
             await self._worker.quit()
         except AlreadyQuit:
@@ -290,11 +345,11 @@ class AsyncConnection:
 
     async def _begin(self):
         try:
-            transaction = await self._worker.run(self._connection.begin)
+            transaction = await self._run_in_thread(self._connection.begin)
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        return AsyncTransaction(transaction, self._worker.run)
+        return AsyncTransaction(transaction, self._run_in_thread)
 
     def begin_nested(self):
         """Like :meth:`Connection.begin_nested\
@@ -307,11 +362,11 @@ class AsyncConnection:
 
     async def _begin_nested(self):
         try:
-            transaction = await self._worker.run(self._connection.begin_nested)
+            transaction = await self._run_in_thread(self._connection.begin_nested)
         except AlreadyQuit:
             raise StatementError("This Connection is closed.", None, None, None)
 
-        return AsyncTransaction(transaction, self._worker.run)
+        return AsyncTransaction(transaction, self._run_in_thread)
 
     def in_transaction(self):
         """Like :meth:`Connection.in_transaction\
@@ -543,21 +598,24 @@ class _EngineTransactionContextManager:
         self._close_with_result = close_with_result
         self._worker = self._engine._make_worker()
 
+    async def _run_in_thread(_self, _func, *args, **kwargs):
+        return await _self._worker.run(_func, args, kwargs)
+
     async def __aenter__(self):
-        self._context = await self._worker.run(
+        self._context = await self._run_in_thread(
             self._engine._engine.begin, self._close_with_result)
 
-        conn = await self._worker.run(self._context.__enter__)
+        conn = await self._run_in_thread(self._context.__enter__)
         return AsyncConnection(conn, self._worker, self._engine)
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        return await self._worker.run(
+        return await self._run_in_thread(
             self._context.__exit__, exc_type, exc_val, exc_tb)
 
 
 class ThreadWorker(ABC):
     @abstractmethod
-    async def run(_self, _func, *args, **kwargs):
+    async def run(self, func, args=(), kwargs=None):
         raise NotImplementedError
 
     @abstractmethod

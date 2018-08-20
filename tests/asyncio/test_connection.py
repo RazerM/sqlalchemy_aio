@@ -184,7 +184,7 @@ async def test_run_callable_warning(asyncio_engine):
         thread_called = True
 
     async with asyncio_engine.connect() as conn:
-        await conn._worker.run(thread_fn, conn)
+        await conn.run_in_thread(thread_fn, conn)
         assert thread_called
 
 
@@ -203,7 +203,7 @@ async def test_run_visitor_exception(asyncio_engine, mytable):
         thread_called = True
 
     async with asyncio_engine.connect() as conn:
-        await conn._worker.run(thread_fn, conn)
+        await conn.run_in_thread(thread_fn, conn)
         assert thread_called
 
 
@@ -223,5 +223,5 @@ async def test_sync_cm_exception(asyncio_engine):
         thread_called = True
 
     async with asyncio_engine.connect() as conn:
-        await conn._worker.run(thread_fn, conn)
+        await conn.run_in_thread(thread_fn, conn)
         assert thread_called

@@ -182,7 +182,7 @@ async def test_run_callable_warning(trio_engine):
         thread_called = True
 
     async with trio_engine.connect() as conn:
-        await conn._worker.run(thread_fn, conn)
+        await conn.run_in_thread(thread_fn, conn)
         assert thread_called
 
 
@@ -201,7 +201,7 @@ async def test_run_visitor_exception(trio_engine, mytable):
         thread_called = True
 
     async with trio_engine.connect() as conn:
-        await conn._worker.run(thread_fn, conn)
+        await conn.run_in_thread(thread_fn, conn)
         assert thread_called
 
 
@@ -221,5 +221,5 @@ async def test_sync_cm_exception(trio_engine):
         thread_called = True
 
     async with trio_engine.connect() as conn:
-        await conn._worker.run(thread_fn, conn)
+        await conn.run_in_thread(thread_fn, conn)
         assert thread_called
