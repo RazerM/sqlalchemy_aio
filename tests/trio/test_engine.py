@@ -1,4 +1,5 @@
 from contextlib import suppress
+from functools import partial
 from unittest.mock import Mock, patch
 
 import pytest
@@ -217,3 +218,18 @@ async def test_sync_cm_exception(asyncio_engine):
         meta.reflect(asyncio_engine)
 
     meta.reflect(asyncio_engine.sync_engine)
+
+
+@pytest.mark.trio
+async def test_public_run_in_thread(trio_engine):
+    def fn(*args, **kwargs):
+        return args, kwargs
+
+    pfn = partial(fn, 1, 2, a=3)
+
+    assert await trio_engine.run_in_thread(pfn) == ((1, 2), {'a': 3})
+    assert await trio_engine.run_in_thread(fn, 1) == ((1,), {})
+
+    # doesn't accept kwargs
+    with pytest.raises(TypeError):
+        await trio_engine.run_in_thread(fn, a=1)
