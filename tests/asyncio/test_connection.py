@@ -241,3 +241,10 @@ async def test_connection_connect(asyncio_engine):
 
     assert conn1.closed
     assert conn1._worker._has_quit
+
+
+@pytest.mark.asyncio
+async def test_attribute_error(asyncio_engine):
+    async with asyncio_engine.connect() as conn:
+        with pytest.raises(AttributeError):
+            conn.spam

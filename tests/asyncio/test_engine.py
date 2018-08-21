@@ -243,3 +243,8 @@ async def test_public_run_in_thread(asyncio_engine):
     # doesn't accept kwargs
     with pytest.raises(TypeError):
         await asyncio_engine.run_in_thread(fn, a=1)
+
+
+def test_attribute_error(asyncio_engine):
+    with pytest.raises(AttributeError):
+        asyncio_engine.spam

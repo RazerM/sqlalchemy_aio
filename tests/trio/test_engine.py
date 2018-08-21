@@ -233,3 +233,8 @@ async def test_public_run_in_thread(trio_engine):
     # doesn't accept kwargs
     with pytest.raises(TypeError):
         await trio_engine.run_in_thread(fn, a=1)
+
+
+def test_attribute_error(trio_engine):
+    with pytest.raises(AttributeError):
+        trio_engine.spam

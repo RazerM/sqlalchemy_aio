@@ -239,3 +239,10 @@ async def test_connection_connect(trio_engine):
 
     assert conn1.closed
     assert conn1._worker._has_quit
+
+
+@pytest.mark.trio
+async def test_attribute_error(trio_engine):
+    async with trio_engine.connect() as conn:
+        with pytest.raises(AttributeError):
+            conn.spam
