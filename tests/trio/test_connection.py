@@ -223,3 +223,19 @@ async def test_sync_cm_exception(trio_engine):
     async with trio_engine.connect() as conn:
         await conn.run_in_thread(thread_fn, conn)
         assert thread_called
+
+
+@pytest.mark.trio
+async def test_connection_connect(trio_engine):
+    async with trio_engine.connect() as conn1:
+        assert await conn1.scalar(select([1])) == 1
+        async with conn1.connect() as conn2:
+            assert await conn2.scalar(select([1])) == 1
+
+        assert not conn1.closed
+        assert conn2.closed
+        assert not conn1._worker._has_quit
+        assert conn2._worker._has_quit
+
+    assert conn1.closed
+    assert conn1._worker._has_quit

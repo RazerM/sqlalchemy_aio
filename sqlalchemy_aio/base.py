@@ -21,7 +21,7 @@ class AsyncEngine(ABC):
         self._engine_worker = None
 
     @abstractmethod
-    def _make_worker(self):
+    def _make_worker(self, *, branch_from=None):
         raise NotImplementedError
 
     async def _run_in_thread(_self, _func, *args, **kwargs):
@@ -291,7 +291,7 @@ class AsyncConnection:
         return _ConnectionContextManager(self._make_async_connection())
 
     async def _make_async_connection(self):
-        worker = self._engine._make_worker()
+        worker = self._engine._make_worker(branch_from=self._worker)
         connection = await worker.run(self._connection.connect)
         return AsyncConnection(connection, worker, self._engine)
 
