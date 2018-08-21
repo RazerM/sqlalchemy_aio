@@ -2,10 +2,8 @@ DDL
 ===
 
 Because of some of the limitations in the SQLAlchemy API, it’s not possible to
-create tables using :meth:`sqlalchemy.schema.Table.create` or
-:meth:`sqlalchemy.schema.MetaData.create_all`. Luckily, SQLAlchemy provides an
-API that still makes it possible to create tables and perform other DDL
-operations.
+asynchronously create tables using :meth:`sqlalchemy.schema.Table.create` or
+:meth:`sqlalchemy.schema.MetaData.create_all`.
 
 Instead of:
 
@@ -18,10 +16,28 @@ Instead of:
 
     users.create(engine)
 
-or
+
+you can use :class:`sqlalchemy.schema.CreateTable` or
+:meth:`AsyncEngine.run_in_thread`:
 
 .. code-block:: python
 
-    metadata.create_all()
+    await engine.execute(CreateTable(users))
 
-You can use :class:`sqlalchemy.schema.CreateTable`.
+.. code-block:: python
+
+    await engine.run_in_thread(users.create, engine.sync_engine)
+
+
+For :meth:`MetaData.create_all() <sqlalchemy.schema.MetaData.create_all>`,
+instead of:
+
+.. code-block:: python
+
+    metadata.create_all(engine)
+
+you have to do:
+
+.. code-block:: python
+
+    await engine.run_in_thread(metadata.create_all, engine.sync_engine)
