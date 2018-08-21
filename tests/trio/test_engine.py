@@ -9,10 +9,10 @@ from sqlalchemy.schema import CreateTable
 from sqlalchemy_aio import TRIO_STRATEGY
 from sqlalchemy_aio.base import AsyncConnection, AsyncTransaction
 from sqlalchemy_aio.exc import BlockingWarning
-from sqlalchemy_aio.trio import TrioEngine
 
 
 def test_create_engine():
+    from sqlalchemy_aio.trio import TrioEngine
     engine = create_engine('sqlite://', strategy=TRIO_STRATEGY)
     assert isinstance(engine, TrioEngine)
 

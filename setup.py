@@ -25,9 +25,12 @@ requires = [
 
 extras_require = dict()
 
-extras_require['test'] = [
+extras_require['test-noextras'] = [
     'pytest >= 3',
     'pytest-asyncio >= 0.8',
+]
+
+extras_require['test'] = extras_require['test-noextras'] + [
     'pytest-trio >= 0.4.1',
 ]
 
