@@ -198,6 +198,15 @@ def test_logger(asyncio_engine):
 
 
 @pytest.mark.asyncio
+async def test_echo(capsys):
+    asyncio_engine = create_engine(
+        'sqlite://', strategy=ASYNCIO_STRATEGY, echo=True)
+    await asyncio_engine.scalar(select([98465]))
+    captured = capsys.readouterr()
+    assert '98465' in captured.out
+
+
+@pytest.mark.asyncio
 async def test_run_callable_warning(asyncio_engine):
     meta = MetaData()
     with pytest.warns(BlockingWarning, match='sync_engine') as record:

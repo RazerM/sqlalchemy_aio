@@ -20,6 +20,9 @@
   This is only called internally.
 - Connections created using `AsyncEngine.begin()` now create their own
   worker, like `AsyncEngine.connect()`.
+- Passing `echo=True` to `create_engine` was broken ([#12][]).
+
+[#12]: https://github.com/RazerM/sqlalchemy_aio/issues/12
 
 ## [0.13.0][0.13.0]
 ### Added

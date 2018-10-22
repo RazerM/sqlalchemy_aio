@@ -7,11 +7,12 @@ from represent import ReprHelper
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import StatementError
 from sqlalchemy import util
+from sqlalchemy.log import Identified
 
 from .exc import AlreadyQuit, BlockingWarning
 
 
-class AsyncEngine(ABC):
+class AsyncEngine(Identified, ABC):
     def __init__(self, pool, dialect, url, logging_name=None, echo=None,
                  execution_options=None, **kwargs):
         self._engine = Engine(
@@ -74,9 +75,6 @@ class AsyncEngine(ABC):
     @property
     def _execution_options(self):
         return self._engine._execution_options
-
-    def _should_log_info(self):
-        return self._engine._should_log_info()
 
     @property
     def sync_engine(self):

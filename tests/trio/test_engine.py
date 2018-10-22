@@ -187,6 +187,16 @@ def test_logger(trio_engine):
     assert trio_engine.logger
 
 
+@pytest.mark.xfail(reason='capsys not working with Trio test')
+@pytest.mark.trio
+async def test_echo(capsys):
+    trio_engine = create_engine(
+        'sqlite://', strategy=TRIO_STRATEGY, echo=True)
+    await trio_engine.scalar(select([98465]))
+    captured = capsys.readouterr()
+    assert '98465' in captured.out
+
+
 @pytest.mark.trio
 async def test_run_callable_warning(trio_engine):
     meta = MetaData()
