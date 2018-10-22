@@ -1,2 +1,2 @@
 The trio tests are a copy of the asyncio tests with minimal changes, unless
-I can use pytest magic to abstract away whether asyncio or trio us running.
+I can use pytest magic to abstract away whether asyncio or trio is running.

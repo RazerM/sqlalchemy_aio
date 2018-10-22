@@ -187,37 +187,37 @@ def test_logger(trio_engine):
     assert trio_engine.logger
 
 
-@pytest.mark.asyncio
-async def test_run_callable_warning(asyncio_engine):
+@pytest.mark.trio
+async def test_run_callable_warning(trio_engine):
     meta = MetaData()
     with pytest.warns(BlockingWarning, match='sync_engine') as record:
         with suppress(NoSuchTableError):
-            Table('sometable', meta, autoload_with=asyncio_engine)
+            Table('sometable', meta, autoload_with=trio_engine)
 
     assert len(record) == 1
 
     with pytest.warns(None) as record:
         with suppress(NoSuchTableError):
-            Table('sometable', meta, autoload_with=asyncio_engine.sync_engine)
+            Table('sometable', meta, autoload_with=trio_engine.sync_engine)
 
     assert len(record) == 0
 
 
-@pytest.mark.asyncio
-async def test_run_visitor_exception(asyncio_engine, mytable):
+@pytest.mark.trio
+async def test_run_visitor_exception(trio_engine, mytable):
     with pytest.raises(AttributeError, match='Did you try to use'):
-        mytable.create(asyncio_engine)
+        mytable.create(trio_engine)
 
-    mytable.create(asyncio_engine.sync_engine)
+    mytable.create(trio_engine.sync_engine)
 
 
-@pytest.mark.asyncio
-async def test_sync_cm_exception(asyncio_engine):
+@pytest.mark.trio
+async def test_sync_cm_exception(trio_engine):
     meta = MetaData()
     with pytest.raises(TypeError, match='Use async with'):
-        meta.reflect(asyncio_engine)
+        meta.reflect(trio_engine)
 
-    meta.reflect(asyncio_engine.sync_engine)
+    meta.reflect(trio_engine.sync_engine)
 
 
 @pytest.mark.trio
