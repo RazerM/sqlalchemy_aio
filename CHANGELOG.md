@@ -6,11 +6,11 @@
 - `AsyncConnection.sync_connection`property.
 - Blocking method `run_callable` has been implemented for
   `AsyncConnection` and `AsyncEngine`. This allows
-  `Table(..., autoload_with=engine)`, which emits a `BlockingWarning`.
+  `Table(..., autoload_with=engine)`, which emits a `BlockingWarning` ([#10][]).
 - Detects attempts to use `Table().create(bind=engine)` or
   `MetaData().create_all()` and raises a helpful error message.
 - Detects attempts to use `MetData().reflect()` and raises a helpful
-  error message.
+  error message ([#13][]).
 - `AsyncConnection.connect()` method.
 - Public `run_in_thread()` async method has been added to `AsyncConnection`
   and `AsyncEngine`.
@@ -22,7 +22,9 @@
   worker, like `AsyncEngine.connect()`.
 - Passing `echo=True` to `create_engine` was broken ([#12][]).
 
+[#10]: https://github.com/RazerM/sqlalchemy_aio/issues/10
 [#12]: https://github.com/RazerM/sqlalchemy_aio/issues/12
+[#13]: https://github.com/RazerM/sqlalchemy_aio/issues/13
 
 ## [0.13.0][0.13.0]
 ### Added
