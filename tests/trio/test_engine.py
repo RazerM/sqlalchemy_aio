@@ -3,7 +3,7 @@ from functools import partial
 from unittest.mock import Mock, patch
 
 import pytest
-from sqlalchemy import MetaData, Table, create_engine, select
+from sqlalchemy import MetaData, Table, create_engine, event, select
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.schema import CreateTable
 
@@ -228,6 +228,12 @@ async def test_sync_cm_exception(trio_engine):
         meta.reflect(trio_engine)
 
     meta.reflect(trio_engine.sync_engine)
+
+
+@pytest.mark.trio
+async def test_event_listen_exception(trio_engine):
+    with pytest.raises(AttributeError, match='Did you try to use'):
+        event.listen(trio_engine, 'connect', None)
 
 
 @pytest.mark.trio

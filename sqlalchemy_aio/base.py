@@ -204,6 +204,11 @@ class AsyncEngine(Identified, ABC):
                 'is a blocking function. Consider using sqlalchemy.schema.'
                 'CreateTable instead'
             )
+        elif item == 'dispatch':
+            raise AttributeError(
+                msg + ' Did you try to use event.listen(engine, ...)? You must '
+                'use event.listen(engine.sync_engine, ...) instead.'
+            )
 
         raise AttributeError(msg)
 
@@ -404,6 +409,11 @@ class AsyncConnection:
                 'similar? You must use Table.create(connection.sync_connection'
                 ') instead, which is a blocking function. Consider using '
                 'sqlalchemy.schema.CreateTable instead.'
+            )
+        elif item == 'dispatch':
+            raise AttributeError(
+                msg + ' Did you try to use event.listen(connection, ...)? You'
+                'must use event.listen(connection.sync_connection, ...) instead.'
             )
 
         raise AttributeError(msg)

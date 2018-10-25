@@ -3,7 +3,7 @@ from functools import partial
 from unittest.mock import Mock, patch
 
 import pytest
-from sqlalchemy import MetaData, Table, create_engine, select
+from sqlalchemy import MetaData, Table, create_engine, event, select
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.schema import CreateTable
 
@@ -237,6 +237,12 @@ async def test_sync_cm_exception(asyncio_engine):
         meta.reflect(asyncio_engine)
 
     meta.reflect(asyncio_engine.sync_engine)
+
+
+@pytest.mark.asyncio
+async def test_event_listen_exception(asyncio_engine):
+    with pytest.raises(AttributeError, match='Did you try to use'):
+        event.listen(asyncio_engine, 'connect', None)
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,7 @@
 from contextlib import suppress
 
 import pytest
-from sqlalchemy import MetaData, Table, select
+from sqlalchemy import MetaData, Table, event, select
 from sqlalchemy.exc import NoSuchTableError, StatementError
 from sqlalchemy.schema import CreateTable
 
@@ -225,6 +225,13 @@ async def test_sync_cm_exception(asyncio_engine):
     async with asyncio_engine.connect() as conn:
         await conn.run_in_thread(thread_fn, conn)
         assert thread_called
+
+
+@pytest.mark.asyncio
+async def test_event_listen_exception(asyncio_engine):
+    async with asyncio_engine.connect() as conn:
+        with pytest.raises(AttributeError, match='Did you try to use'):
+            event.listen(conn, 'connect', None)
 
 
 @pytest.mark.asyncio

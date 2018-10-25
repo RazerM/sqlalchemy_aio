@@ -14,6 +14,8 @@
 - `AsyncConnection.connect()` method.
 - Public `run_in_thread()` async method has been added to `AsyncConnection`
   and `AsyncEngine`.
+- Detects attempts to use `event.listen()` with `AsyncConnection` or
+  `AsyncEngine` and raises a more helpful error message ([#1][]).
 
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.
@@ -22,6 +24,7 @@
   worker, like `AsyncEngine.connect()`.
 - Passing `echo=True` to `create_engine` was broken ([#12][]).
 
+[#1]: https://github.com/RazerM/sqlalchemy_aio/issues/1
 [#10]: https://github.com/RazerM/sqlalchemy_aio/issues/10
 [#12]: https://github.com/RazerM/sqlalchemy_aio/issues/12
 [#13]: https://github.com/RazerM/sqlalchemy_aio/issues/13
