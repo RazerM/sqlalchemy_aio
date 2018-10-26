@@ -1,8 +1,9 @@
-import trio
 import threading
+from contextlib import suppress
 from functools import partial
 
 import outcome
+import trio
 from trio import Cancelled, RunFinishedError
 
 from .base import AsyncEngine, ThreadWorker
@@ -15,14 +16,22 @@ class TrioThreadWorker(ThreadWorker):
     def __init__(self, *, branch_from=None):
         if branch_from is None:
             self._portal = trio.BlockingTrioPortal()
-            self._request_queue = trio.Queue(1)
-            self._response_queue = trio.Queue(1)
+            send_to_thread, receive_from_trio = trio.open_memory_channel(1)
+            send_to_trio, receive_from_thread = trio.open_memory_channel(1)
+
+            self._send_to_thread = send_to_thread
+            self._send_to_trio = send_to_trio
+            self._receive_from_trio = receive_from_trio
+            self._receive_from_thread = receive_from_thread
+
             self._thread = threading.Thread(target=self.thread_fn, daemon=True)
             self._thread.start()
         else:
             self._portal = branch_from._portal
-            self._request_queue = branch_from._request_queue
-            self._response_queue = branch_from._response_queue
+            self._send_to_thread = branch_from._send_to_thread
+            self._send_to_trio = branch_from._send_to_trio
+            self._receive_from_trio = branch_from._receive_from_trio
+            self._receive_from_thread = branch_from._receive_from_thread
             self._thread = branch_from._thread
 
         self._branched = branch_from is not None
@@ -31,18 +40,16 @@ class TrioThreadWorker(ThreadWorker):
     def thread_fn(self):
         while True:
             try:
-                request = self._portal.run(self._request_queue.get)
-            except Cancelled:
-                continue
-            except RunFinishedError:
+                request = self._portal.run(self._receive_from_trio.receive)
+            except (Cancelled, RunFinishedError):
+                break
+            except trio.EndOfChannel:
+                with suppress(Cancelled, RunFinishedError):
+                    self._portal.run(self._send_to_trio.aclose)
                 break
 
-            if request is not _STOP:
-                response = outcome.capture(request)
-                self._portal.run(self._response_queue.put, response)
-            else:
-                self._portal.run(self._response_queue.put, None)
-                break
+            response = outcome.capture(request)
+            self._portal.run(self._send_to_trio.send, response)
 
     async def run(self, func, args=(), kwargs=None):
         if self._has_quit:
@@ -53,8 +60,8 @@ class TrioThreadWorker(ThreadWorker):
         elif args:
             func = partial(func, *args)
 
-        await self._request_queue.put(func)
-        resp = await self._response_queue.get()
+        await self._send_to_thread.send(func)
+        resp = await self._receive_from_thread.receive()
         return resp.unwrap()
 
     async def quit(self):
@@ -66,8 +73,7 @@ class TrioThreadWorker(ThreadWorker):
         if self._branched:
             return
 
-        await self._request_queue.put(_STOP)
-        await self._response_queue.get()
+        await self._send_to_thread.aclose()
 
 
 class TrioEngine(AsyncEngine):

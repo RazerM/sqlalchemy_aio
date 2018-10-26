@@ -16,6 +16,9 @@
   and `AsyncEngine`.
 - Detects attempts to use `event.listen()` with `AsyncConnection` or
   `AsyncEngine` and raises a more helpful error message ([#1][]).
+  
+### Changed
+- Trio support requires trio 0.9+
 
 ### Fixed
 - `ThreadWorker.quit()` will raise `AlreadyQuit` instead of blocking.

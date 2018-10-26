@@ -31,11 +31,11 @@ extras_require['test-noextras'] = [
 ]
 
 extras_require['test'] = extras_require['test-noextras'] + [
-    'pytest-trio >= 0.4.1',
+    'pytest-trio >= 0.5.1',
 ]
 
 extras_require['trio'] = [
-    'trio >= 0.3',
+    'trio >= 0.9',
 ]
 
 
