@@ -1,5 +1,9 @@
 # Change Log
 ## [Unreleased][unreleased]
+
+N/A
+
+## [0.14.0]
 ### Added
 - `AsyncConnection.dialect` property.
 - `AsyncEngine.sync_engine` property.
@@ -32,7 +36,7 @@
 [#12]: https://github.com/RazerM/sqlalchemy_aio/issues/12
 [#13]: https://github.com/RazerM/sqlalchemy_aio/issues/13
 
-## [0.13.0][0.13.0]
+## [0.13.0]
 ### Added
 - [Trio] support with `TRIO_STRATEGY`.
 
@@ -64,7 +68,8 @@
 ## [0.10.0] - 2016-12-19
 Initial release.
 
-[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.13.0...HEAD
+[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.0...HEAD
+[0.14.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.10.0...0.11.0
