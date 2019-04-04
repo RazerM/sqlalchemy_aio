@@ -2,8 +2,7 @@ import asyncio
 import threading
 from concurrent.futures import CancelledError
 from functools import partial
-
-import outcome
+from queue import Queue, Empty
 
 from .base import AsyncEngine, ThreadWorker
 from .exc import AlreadyQuit
@@ -19,13 +18,11 @@ class AsyncioThreadWorker(ThreadWorker):
         self._loop = loop
 
         if branch_from is None:
-            self._request_queue = asyncio.Queue(1)
-            self._response_queue = asyncio.Queue(1)
-            self._thread = threading.Thread(target=self.thread_fn, daemon=True)
+            self._queue = Queue()
+            self._thread = threading.Thread(target=self.thread_fn, daemon=True, name="AlchemyAsyncWorker")
             self._thread.start()
         else:
-            self._request_queue = branch_from._request_queue
-            self._response_queue = branch_from._response_queue
+            self._queue = branch_from._queue
             self._thread = branch_from._thread
 
         self._branched = branch_from is not None
@@ -33,22 +30,18 @@ class AsyncioThreadWorker(ThreadWorker):
 
     def thread_fn(self):
         while True:
-            fut = asyncio.run_coroutine_threadsafe(
-                self._request_queue.get(), self._loop)
             try:
-                request = fut.result()
-            except CancelledError:
+                future, func = self._queue.get(timeout=0.1)
+            except Empty:
                 continue
-
-            if request is not _STOP:
-                response = outcome.capture(request)
-                fut = asyncio.run_coroutine_threadsafe(
-                    self._response_queue.put(response), self._loop)
-                fut.result()
+            if func is not None:
+                try:
+                    result = func()
+                    self._loop.call_soon_threadsafe(future.set_result, result)
+                except Exception as e:
+                    self._loop.call_soon_threadsafe(future.set_exception, e)
             else:
-                fut = asyncio.run_coroutine_threadsafe(
-                    self._response_queue.put(None), self._loop)
-                fut.result()
+                self._loop.call_soon_threadsafe(future.set_result, None)
                 break
 
     async def run(self, func, args=(), kwargs=None):
@@ -60,9 +53,9 @@ class AsyncioThreadWorker(ThreadWorker):
         elif args:
             func = partial(func, *args)
 
-        await self._request_queue.put(func)
-        resp = await self._response_queue.get()
-        return resp.unwrap()
+        future = self._loop.create_future()
+        self._queue.put_nowait((future, func))
+        return await future
 
     async def quit(self):
         if self._has_quit:
@@ -72,9 +65,12 @@ class AsyncioThreadWorker(ThreadWorker):
 
         if self._branched:
             return
+        future = self._loop.create_future()
+        self._queue.put_nowait((future, None))
+        await future
 
-        await self._request_queue.put(_STOP)
-        await self._response_queue.get()
+        # await self._request_queue.put(_STOP)
+        # await self._response_queue.get()
 
 
 class AsyncioEngine(AsyncEngine):
