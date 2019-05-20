@@ -19,8 +19,8 @@ class AsyncioThreadWorker(ThreadWorker):
         self._loop = loop
 
         if branch_from is None:
-            self._request_queue = asyncio.Queue(1)
-            self._response_queue = asyncio.Queue(1)
+            self._request_queue = asyncio.Queue(1, loop=loop)
+            self._response_queue = asyncio.Queue(1, loop=loop)
             self._thread = threading.Thread(target=self.thread_fn, daemon=True)
             self._thread.start()
         else:

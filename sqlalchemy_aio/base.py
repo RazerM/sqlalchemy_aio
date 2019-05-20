@@ -102,7 +102,11 @@ class AsyncEngine(Identified, ABC):
 
     async def _make_async_connection(self):
         worker = self._make_worker()
-        connection = await worker.run(self._engine.connect)
+        try:
+            connection = await worker.run(self._engine.connect)
+        except Exception:
+            await worker.quit()
+            raise
         return AsyncConnection(connection, worker, self)
 
     def begin(self, close_with_result=False):
