@@ -104,7 +104,7 @@ class AsyncEngine(Identified, ABC):
         worker = self._make_worker()
         try:
             connection = await worker.run(self._engine.connect)
-        except Exception as e:
+        except Exception:
             await worker.quit()
             raise
         return AsyncConnection(connection, worker, self)
