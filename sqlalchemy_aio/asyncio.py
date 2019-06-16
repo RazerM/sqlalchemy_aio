@@ -8,7 +8,18 @@ import outcome
 from .base import AsyncEngine, ThreadWorker
 from .exc import AlreadyQuit
 
-_STOP = object()
+
+class Request:
+    def __init__(self, func):
+        self.func = func
+        self.finished = asyncio.Event()
+        self.response = None
+
+    async def set_finished(self):
+        """Needed to be executed in the same thread as the loop.
+        Since Event() is not thread-safe.
+        """
+        self.finished.set()
 
 
 class AsyncioThreadWorker(ThreadWorker):
@@ -20,12 +31,10 @@ class AsyncioThreadWorker(ThreadWorker):
 
         if branch_from is None:
             self._request_queue = asyncio.Queue(1, loop=loop)
-            self._response_queue = asyncio.Queue(1, loop=loop)
             self._thread = threading.Thread(target=self.thread_fn, daemon=True)
             self._thread.start()
         else:
             self._request_queue = branch_from._request_queue
-            self._response_queue = branch_from._response_queue
             self._thread = branch_from._thread
 
         self._branched = branch_from is not None
@@ -40,14 +49,15 @@ class AsyncioThreadWorker(ThreadWorker):
             except CancelledError:
                 continue
 
-            if request is not _STOP:
-                response = outcome.capture(request)
+            if request.func is not None:
+                request.response = outcome.capture(request.func)
+
                 fut = asyncio.run_coroutine_threadsafe(
-                    self._response_queue.put(response), self._loop)
+                    request.set_finished(), self._loop)
                 fut.result()
             else:
                 fut = asyncio.run_coroutine_threadsafe(
-                    self._response_queue.put(None), self._loop)
+                    request.set_finished(), self._loop)
                 fut.result()
                 break
 
@@ -60,9 +70,10 @@ class AsyncioThreadWorker(ThreadWorker):
         elif args:
             func = partial(func, *args)
 
-        await self._request_queue.put(func)
-        resp = await self._response_queue.get()
-        return resp.unwrap()
+        request = Request(func)
+        await self._request_queue.put(request)
+        await request.finished.wait()
+        return request.response.unwrap()
 
     async def quit(self):
         if self._has_quit:
@@ -73,8 +84,9 @@ class AsyncioThreadWorker(ThreadWorker):
         if self._branched:
             return
 
-        await self._request_queue.put(_STOP)
-        await self._response_queue.get()
+        stop = Request(None)
+        await self._request_queue.put(stop)
+        await stop.finished.wait()
 
 
 class AsyncioEngine(AsyncEngine):
