@@ -7,7 +7,6 @@ from represent import ReprHelper
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import StatementError
 from sqlalchemy import util
-from sqlalchemy.log import Identified
 
 from .exc import AlreadyQuit, BlockingWarning
 
