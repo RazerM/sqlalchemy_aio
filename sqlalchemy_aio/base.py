@@ -12,7 +12,7 @@ from sqlalchemy.log import Identified
 from .exc import AlreadyQuit, BlockingWarning
 
 
-class AsyncEngine(Identified, ABC):
+class AsyncEngine(Engine, ABC):
     def __init__(self, pool, dialect, url, logging_name=None, echo=None,
                  execution_options=None, **kwargs):
         self._engine = Engine(
@@ -210,7 +210,8 @@ class AsyncEngine(Identified, ABC):
             )
         elif item == 'dispatch':
             raise AttributeError(
-                msg + ' Did you try to use event.listen(engine, ...)? You must '
+                msg +
+                ' Did you try to use event.listen(engine, ...)? You must '
                 'use event.listen(engine.sync_engine, ...) instead.'
             )
 
@@ -221,6 +222,7 @@ class AsyncConnection:
     """Mostly like :class:`sqlalchemy.engine.Connection` except some of the
     methods are coroutines.
     """
+
     def __init__(self, connection, worker, engine):
         self._connection = connection
         self._worker = worker
@@ -287,7 +289,8 @@ class AsyncConnection:
             rp = await self._run_in_thread(
                 self._connection.execute, *args, **kwargs)
         except AlreadyQuit:
-            raise StatementError("This Connection is closed.", None, None, None)
+            raise StatementError(
+                "This Connection is closed.", None, None, None)
 
         return AsyncResultProxy(rp, self._run_in_thread)
 
@@ -318,7 +321,8 @@ class AsyncConnection:
                 self._connection.close, *args, **kwargs)
             await self._worker.quit()
         except AlreadyQuit:
-            raise StatementError("This Connection is closed.", None, None, None)
+            raise StatementError(
+                "This Connection is closed.", None, None, None)
 
         return res
 
@@ -354,7 +358,8 @@ class AsyncConnection:
         try:
             transaction = await self._run_in_thread(self._connection.begin)
         except AlreadyQuit:
-            raise StatementError("This Connection is closed.", None, None, None)
+            raise StatementError(
+                "This Connection is closed.", None, None, None)
 
         return AsyncTransaction(transaction, self._run_in_thread)
 
@@ -371,7 +376,8 @@ class AsyncConnection:
         try:
             transaction = await self._run_in_thread(self._connection.begin_nested)
         except AlreadyQuit:
-            raise StatementError("This Connection is closed.", None, None, None)
+            raise StatementError(
+                "This Connection is closed.", None, None, None)
 
         return AsyncTransaction(transaction, self._run_in_thread)
 
@@ -427,6 +433,7 @@ class AsyncTransaction:
     """Mostly like :class:`sqlalchemy.engine.Transaction` except some of the
     methods are coroutines.
     """
+
     def __init__(self, transaction, run_in_thread):
         self._transaction = transaction
         self._run_in_thread = run_in_thread
@@ -470,6 +477,7 @@ class AsyncResultProxy:
     """Mostly like :class:`sqlalchemy.engine.ResultProxy` except some of the
     methods are coroutines.
     """
+
     def __init__(self, result_proxy, run_in_thread):
         self._result_proxy = result_proxy
         self._run_in_thread = run_in_thread
