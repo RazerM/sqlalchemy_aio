@@ -21,7 +21,7 @@ async def test_already_quit():
 async def test_interrupted_run():
     worker = AsyncioThreadWorker()
 
-    loop = asyncio.get_running_loop()
+    loop = asyncio.get_event_loop()
     event = asyncio.Event()
 
     async def set_event():
