@@ -31,7 +31,7 @@ async def test_interrupted_run():
         asyncio.run_coroutine_threadsafe(set_event(), loop)
         return number
 
-    task = asyncio.create_task(worker.run(returns_number, [2]))
+    task = asyncio.ensure_future(worker.run(returns_number, [2]))
     await event.wait()
     task.cancel()
     value = await worker.run(returns_number, [3])
