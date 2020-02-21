@@ -15,7 +15,7 @@ class Request:
         self.finished = asyncio.Event()
         self.response = None
 
-    async def set_finished(self):
+    def set_finished(self):
         """Needed to be executed in the same thread as the loop.
         Since Event() is not thread-safe.
         """
@@ -52,13 +52,9 @@ class AsyncioThreadWorker(ThreadWorker):
             if request.func is not None:
                 request.response = outcome.capture(request.func)
 
-                fut = asyncio.run_coroutine_threadsafe(
-                    request.set_finished(), self._loop)
-                fut.result()
+                self._loop.call_soon_threadsafe(request.set_finished)
             else:
-                fut = asyncio.run_coroutine_threadsafe(
-                    request.set_finished(), self._loop)
-                fut.result()
+                self._loop.call_soon_threadsafe(request.set_finished)
                 break
 
     async def run(self, func, args=(), kwargs=None):
