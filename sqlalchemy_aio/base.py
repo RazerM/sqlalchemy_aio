@@ -299,7 +299,11 @@ class AsyncConnection:
 
     async def _make_async_connection(self):
         worker = self._engine._make_worker(branch_from=self._worker)
-        connection = await worker.run(self._connection.connect)
+        try:
+            connection = await worker.run(self._connection.connect)
+        except Exception:
+            await worker.quit()
+            raise
         return AsyncConnection(connection, worker, self._engine)
 
     async def scalar(self, *args, **kwargs):
