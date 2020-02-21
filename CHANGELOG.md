@@ -3,6 +3,22 @@
 
 N/A
 
+## [0.15.0]
+### Fixed
+- Concurrency problems in `AsyncioThreadWorker` ([#20][]).
+- Wait for worker to quit if `AsyncConnection.connect` fails.
+
+### Changed
+- Trio support requires trio 0.12+
+
+[#20]: https://github.com/RazerM/sqlalchemy_aio/issues/20
+
+## [0.14.1]
+### Fixed
+- Wait for worker to quit if `AsyncEngine.connect` fails ([#18][]).
+
+[#18]: https://github.com/RazerM/sqlalchemy_aio/issues/18
+
 ## [0.14.0]
 ### Added
 - `AsyncConnection.dialect` property.
@@ -68,7 +84,9 @@ N/A
 ## [0.10.0] - 2016-12-19
 Initial release.
 
-[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.0...HEAD
+[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.15.0...HEAD
+[0.15.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.1...0.15.0
+[0.14.1]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.0...0.14.1
 [0.14.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.11.0...0.12.0
