@@ -15,7 +15,7 @@ _STOP = object()
 class TrioThreadWorker(ThreadWorker):
     def __init__(self, *, branch_from=None):
         if branch_from is None:
-            self._portal = trio.BlockingTrioPortal()
+            self._trio_token = trio.hazmat.current_trio_token()
             send_to_thread, receive_from_trio = trio.open_memory_channel(1)
             send_to_trio, receive_from_thread = trio.open_memory_channel(1)
 
@@ -27,7 +27,6 @@ class TrioThreadWorker(ThreadWorker):
             self._thread = threading.Thread(target=self.thread_fn, daemon=True)
             self._thread.start()
         else:
-            self._portal = branch_from._portal
             self._send_to_thread = branch_from._send_to_thread
             self._send_to_trio = branch_from._send_to_trio
             self._receive_from_trio = branch_from._receive_from_trio
@@ -40,16 +39,22 @@ class TrioThreadWorker(ThreadWorker):
     def thread_fn(self):
         while True:
             try:
-                request = self._portal.run(self._receive_from_trio.receive)
+                request = trio.from_thread.run(
+                    self._receive_from_trio.receive, trio_token=self._trio_token
+                )
             except (Cancelled, RunFinishedError):
                 break
             except trio.EndOfChannel:
                 with suppress(Cancelled, RunFinishedError):
-                    self._portal.run(self._send_to_trio.aclose)
+                    trio.from_thread.run(
+                        self._send_to_trio.aclose, trio_token=self._trio_token
+                    )
                 break
 
             response = outcome.capture(request)
-            self._portal.run(self._send_to_trio.send, response)
+            trio.from_thread.run(
+                self._send_to_trio.send, response, trio_token=self._trio_token
+            )
 
     async def run(self, func, args=(), kwargs=None):
         if self._has_quit:
