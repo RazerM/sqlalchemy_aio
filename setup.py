@@ -35,7 +35,7 @@ extras_require['test'] = extras_require['test-noextras'] + [
 ]
 
 extras_require['trio'] = [
-    'trio >= 0.9',
+    'trio >= 0.12',
 ]
 
 
