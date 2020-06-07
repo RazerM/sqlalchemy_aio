@@ -1,7 +1,6 @@
 import threading
 from contextlib import suppress
 from functools import partial
-import warnings
 
 import outcome
 import trio
@@ -13,11 +12,8 @@ from .exc import AlreadyQuit
 _STOP = object()
 
 # trio.hazmat was renamed trio.lowlevel in version 0.15.0.
-with warnings.catch_warnings(record=True):
-    try:
-        trio_lowlevel = trio.hazmat
-    except (trio.TrioDeprecationWarning, AttributeError):
-        trio_lowlevel = trio.lowlevel
+trio_version = [int(part) for part in trio.__version__.split('.')]
+trio_lowlevel = trio.hazmat if trio_version < [0, 15, 0] else trio.lowlevel
 
 class TrioThreadWorker(ThreadWorker):
     def __init__(self, *, branch_from=None):
