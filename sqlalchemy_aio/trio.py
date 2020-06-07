@@ -6,14 +6,16 @@ import outcome
 import trio
 from trio import Cancelled, RunFinishedError
 
+try:
+    import trio.lowlevel as trio_lowlevel
+except ImportError:
+    import trio.hazmat as trio_lowlevel
+
 from .base import AsyncEngine, ThreadWorker
 from .exc import AlreadyQuit
 
 _STOP = object()
 
-# trio.hazmat was renamed trio.lowlevel in version 0.15.0.
-trio_version = [int(part) for part in trio.__version__.split('.')]
-trio_lowlevel = trio.hazmat if trio_version < [0, 15, 0] else trio.lowlevel
 
 class TrioThreadWorker(ThreadWorker):
     def __init__(self, *, branch_from=None):
