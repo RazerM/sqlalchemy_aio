@@ -4,6 +4,9 @@
 ### Changed
 - Trio support requires trio 0.15+
 
+### Deprecated
+- The loop argument to `AsyncioEngine`.
+
 ### Removed
 - Support for Python 3.5
 

@@ -32,3 +32,6 @@ API Reference
 
 .. autoclass:: BlockingWarning
     :members:
+
+.. autoclass:: SQLAlchemyAioDeprecationWarning
+    :members:

@@ -16,3 +16,8 @@ class BlockingWarning(RuntimeWarning):
         engine = create_engine(..., strategy=TRIO_STRATEGY)
         Table(..., autoload_with=engine)
     """
+
+
+# DeprecationWarning is ignored by default on Python < 3.7, so use UserWarning
+class SQLAlchemyAioDeprecationWarning(UserWarning):
+    """Emitted for deprecated functionality."""

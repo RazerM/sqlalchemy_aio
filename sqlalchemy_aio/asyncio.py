@@ -1,12 +1,13 @@
 import asyncio
 import threading
+import warnings
 from concurrent.futures import CancelledError
 from functools import partial
 
 import outcome
 
 from .base import AsyncEngine, ThreadWorker
-from .exc import AlreadyQuit
+from .exc import AlreadyQuit, SQLAlchemyAioDeprecationWarning
 
 
 class Request:
@@ -93,6 +94,13 @@ class AsyncioEngine(AsyncEngine):
 
         super().__init__(
             pool, dialect, url, logging_name, echo, execution_options, **kwargs)
+
+        if loop is not None:
+            warnings.warn(
+                'The loop argument is deprecated.',
+                category=SQLAlchemyAioDeprecationWarning,
+                stacklevel=4,
+            )
 
         self._loop = loop
 

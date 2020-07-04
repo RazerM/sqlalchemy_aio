@@ -1,4 +1,4 @@
-from .exc import AlreadyQuit, BlockingWarning
+from .exc import AlreadyQuit, BlockingWarning, SQLAlchemyAioDeprecationWarning
 from .strategy import ASYNCIO_STRATEGY, TRIO_STRATEGY
 
 __all__ = [
