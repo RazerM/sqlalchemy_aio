@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # sqlalchemy_aio documentation build configuration file, created by
 # sphinx-quickstart on Wed Oct 12 23:59:14 2016.
