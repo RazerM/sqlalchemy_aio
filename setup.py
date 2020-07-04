@@ -26,8 +26,8 @@ requires = [
 extras_require = dict()
 
 extras_require['test-noextras'] = [
-    'pytest >= 3',
-    'pytest-asyncio >= 0.8',
+    'pytest >= 5.4',
+    'pytest-asyncio >= 0.14',
 ]
 
 extras_require['test'] = extras_require['test-noextras'] + [
@@ -76,5 +76,5 @@ setup(
     license=LICENSE,
     install_requires=requires,
     extras_require=extras_require,
-    python_requires='>=3.5',
+    python_requires='>=3.6',
 )

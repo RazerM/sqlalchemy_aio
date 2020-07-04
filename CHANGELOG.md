@@ -1,7 +1,8 @@
 # Change Log
 ## [Unreleased][unreleased]
 
-N/A
+### Removed
+- Support for Python 3.5
 
 ## [0.15.0]
 ### Fixed
