@@ -1,6 +1,9 @@
 # Change Log
 ## [Unreleased][unreleased]
 
+### Changed
+- Trio support requires trio 0.15+
+
 ### Removed
 - Support for Python 3.5
 

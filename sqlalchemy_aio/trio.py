@@ -15,7 +15,7 @@ _STOP = object()
 class TrioThreadWorker(ThreadWorker):
     def __init__(self, *, branch_from=None):
         if branch_from is None:
-            self._trio_token = trio.hazmat.current_trio_token()
+            self._trio_token = trio.lowlevel.current_trio_token()
             send_to_thread, receive_from_trio = trio.open_memory_channel(1)
             send_to_trio, receive_from_thread = trio.open_memory_channel(1)
 
