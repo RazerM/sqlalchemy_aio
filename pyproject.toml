@@ -1,0 +1,19 @@
+[tool.coverage.run]
+branch = true
+source = [
+    "sqlalchemy_aio",
+    "tests/",
+]
+
+[tool.coverage.paths]
+source = [
+    "sqlalchemy_aio",
+    ".tox/*/lib/python*/site-packages/sqlalchemy_aio",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+	"if __name__ == '__main__':",
+	"pass",
+	"raise NotImplementedError",
+]
