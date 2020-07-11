@@ -1,6 +1,10 @@
 # Change Log
 ## [Unreleased][unreleased]
 
+N/A
+
+## [0.16.0]
+
 ### Changed
 - Trio support requires trio 0.15+
 
@@ -91,7 +95,8 @@
 ## [0.10.0] - 2016-12-19
 Initial release.
 
-[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.15.0...HEAD
+[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.16.0...HEAD
+[0.16.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.15.0...0.16.0
 [0.15.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.1...0.15.0
 [0.14.1]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.0...0.14.1
 [0.14.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.13.0...0.14.0
