@@ -65,6 +65,10 @@ class AsyncEngine(Identified, ABC):
         return self._engine.dialect
 
     @property
+    def hide_parameters(self):
+        return self._engine.hide_parameters
+
+    @property
     def _has_events(self):
         return self._engine._has_events
 
