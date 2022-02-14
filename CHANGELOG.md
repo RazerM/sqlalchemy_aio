@@ -1,7 +1,14 @@
 # Change Log
 ## [Unreleased][unreleased]
 
-N/A
+### Added
+- Python 3.9 and 3.10 support.
+
+### Removed
+- The previously deprecated loop argument to `AsyncioEngine`.
+
+### Fixed
+- Added `sqlalchemy<1.4` version constraint since SQLAlchemy 1.4 is not supported.
 
 ## [0.16.0]
 
