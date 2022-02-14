@@ -35,7 +35,7 @@ def engine_url(request, tmpdir):
 
 @pytest.fixture
 def asyncio_engine(engine_url, event_loop):
-    engine = create_engine(engine_url, strategy=ASYNCIO_STRATEGY, loop=event_loop)
+    engine = create_engine(engine_url, strategy=ASYNCIO_STRATEGY)
     fix_pysqlite_transactions(engine.sync_engine)
     return engine
 

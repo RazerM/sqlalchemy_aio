@@ -1,3 +1,4 @@
+import warnings
 from contextlib import suppress
 from functools import partial
 from unittest.mock import Mock, patch
@@ -18,14 +19,6 @@ pytestmark = pytest.mark.noextras
 def test_create_engine():
     engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY)
     assert isinstance(engine, AsyncioEngine)
-
-
-def test_create_engine_args():
-    loop = Mock()
-
-    engine = create_engine('sqlite://', loop=loop, strategy=ASYNCIO_STRATEGY)
-
-    assert engine._loop is loop
 
 
 @pytest.mark.asyncio
@@ -215,11 +208,10 @@ async def test_run_callable_warning(asyncio_engine):
 
     assert len(record) == 1
 
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
         with suppress(NoSuchTableError):
             Table('sometable', meta, autoload_with=asyncio_engine.sync_engine)
-
-    assert len(record) == 0
 
 
 @pytest.mark.asyncio
@@ -233,8 +225,11 @@ async def test_run_visitor_exception(asyncio_engine, mytable):
 @pytest.mark.asyncio
 async def test_sync_cm_exception(asyncio_engine):
     meta = MetaData()
-    with pytest.raises(TypeError, match='Use async with'):
-        meta.reflect(asyncio_engine)
+    with warnings.catch_warnings():
+        # ignore warning caused by creating a runtime that is never awaited
+        warnings.simplefilter('ignore', RuntimeWarning)
+        with pytest.raises(TypeError, match='Use async with'):
+            meta.reflect(asyncio_engine)
 
     meta.reflect(asyncio_engine.sync_engine)
 
