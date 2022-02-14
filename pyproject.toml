@@ -17,3 +17,10 @@ exclude_lines = [
 	"pass",
 	"raise NotImplementedError",
 ]
+
+[tool.pytest.ini_options]
+addopts = "-r s"
+markers = [
+    "noextras",
+]
+asyncio_mode = "strict"
