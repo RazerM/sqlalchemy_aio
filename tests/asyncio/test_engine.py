@@ -20,14 +20,6 @@ def test_create_engine():
     assert isinstance(engine, AsyncioEngine)
 
 
-def test_create_engine_args():
-    loop = Mock()
-
-    engine = create_engine('sqlite://', loop=loop, strategy=ASYNCIO_STRATEGY)
-
-    assert engine._loop is loop
-
-
 @pytest.mark.asyncio
 async def test_implicit_loop():
     engine = create_engine('sqlite://', strategy=ASYNCIO_STRATEGY)

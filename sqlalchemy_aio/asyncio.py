@@ -24,14 +24,11 @@ class Request:
 
 
 class AsyncioThreadWorker(ThreadWorker):
-    def __init__(self, loop=None, *, branch_from=None):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-
-        self._loop = loop
+    def __init__(self, *, branch_from=None):
+        self._loop = asyncio.get_event_loop()
 
         if branch_from is None:
-            self._request_queue = asyncio.Queue(1, loop=loop)
+            self._request_queue = asyncio.Queue(1)
             self._thread = threading.Thread(target=self.thread_fn, daemon=True)
             self._thread.start()
         else:
@@ -90,19 +87,10 @@ class AsyncioEngine(AsyncEngine):
     """Mostly like :class:`sqlalchemy.engine.Engine` except some of the methods
     are coroutines."""
     def __init__(self, pool, dialect, url, logging_name=None, echo=None,
-                 execution_options=None, loop=None, **kwargs):
+                 execution_options=None, **kwargs):
 
         super().__init__(
             pool, dialect, url, logging_name, echo, execution_options, **kwargs)
 
-        if loop is not None:
-            warnings.warn(
-                'The loop argument is deprecated.',
-                category=SQLAlchemyAioDeprecationWarning,
-                stacklevel=4,
-            )
-
-        self._loop = loop
-
     def _make_worker(self, *, branch_from=None):
-        return AsyncioThreadWorker(self._loop, branch_from=branch_from)
+        return AsyncioThreadWorker(branch_from=branch_from)
