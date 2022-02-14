@@ -224,8 +224,11 @@ async def test_run_visitor_exception(trio_engine, mytable):
 @pytest.mark.trio
 async def test_sync_cm_exception(trio_engine):
     meta = MetaData()
-    with pytest.raises(TypeError, match='Use async with'):
-        meta.reflect(trio_engine)
+    with warnings.catch_warnings():
+        # ignore warning caused by creating a runtime that is never awaited
+        warnings.simplefilter('ignore', RuntimeWarning)
+        with pytest.raises(TypeError, match='Use async with'):
+            meta.reflect(trio_engine)
 
     meta.reflect(trio_engine.sync_engine)
 

@@ -225,8 +225,11 @@ async def test_run_visitor_exception(asyncio_engine, mytable):
 @pytest.mark.asyncio
 async def test_sync_cm_exception(asyncio_engine):
     meta = MetaData()
-    with pytest.raises(TypeError, match='Use async with'):
-        meta.reflect(asyncio_engine)
+    with warnings.catch_warnings():
+        # ignore warning caused by creating a runtime that is never awaited
+        warnings.simplefilter('ignore', RuntimeWarning)
+        with pytest.raises(TypeError, match='Use async with'):
+            meta.reflect(asyncio_engine)
 
     meta.reflect(asyncio_engine.sync_engine)
 
