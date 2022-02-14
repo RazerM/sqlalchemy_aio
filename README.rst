@@ -6,8 +6,16 @@ sqlalchemy_aio
 ``sqlalchemy_aio`` adds asyncio and `Trio`_ support to SQLAlchemy core, derived
 from `alchimia`_.
 
++-------------------------------------------------------------------------------+
+| ⚠️ **Compatibility Note**                                                     |
++===============================================================================+
+| **SQLAlchemy 1.3** is the latest supported version. **SQLAlchemy 1.4**        |
+| brings `native asyncio support`_, so you should consider using that instead.  |
++-------------------------------------------------------------------------------+
+
 .. _alchimia: https://github.com/alex/alchimia
 .. _Trio: https://github.com/python-trio/trio
+.. _`native asyncio support`: https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html
 
 
 Getting started
