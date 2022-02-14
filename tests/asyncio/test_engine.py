@@ -1,3 +1,4 @@
+import warnings
 from contextlib import suppress
 from functools import partial
 from unittest.mock import Mock, patch
@@ -207,11 +208,10 @@ async def test_run_callable_warning(asyncio_engine):
 
     assert len(record) == 1
 
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
         with suppress(NoSuchTableError):
             Table('sometable', meta, autoload_with=asyncio_engine.sync_engine)
-
-    assert len(record) == 0
 
 
 @pytest.mark.asyncio

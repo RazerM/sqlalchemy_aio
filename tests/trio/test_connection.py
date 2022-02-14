@@ -1,3 +1,4 @@
+import warnings
 from contextlib import suppress
 
 import pytest
@@ -173,11 +174,10 @@ async def test_run_callable_warning(trio_engine):
 
         assert len(record) == 1
 
-        with pytest.warns(None) as record:
+        with warnings.catch_warnings():
+            warnings.simplefilter('error')
             with suppress(NoSuchTableError):
                 Table('sometable', meta, autoload_with=conn.sync_connection)
-
-        assert len(record) == 0
 
         thread_called = True
 
