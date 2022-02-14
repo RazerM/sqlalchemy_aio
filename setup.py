@@ -17,7 +17,7 @@ AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
 requires = [
     'represent>=1.4',
-    'sqlalchemy',
+    'sqlalchemy<1.4',
     'outcome',
 ]
 
