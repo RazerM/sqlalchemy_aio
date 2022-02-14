@@ -1,6 +1,10 @@
 # Change Log
 ## [Unreleased][unreleased]
 
+N/A
+
+## [0.17.0]
+
 ### Added
 - Python 3.9 and 3.10 support.
 
@@ -9,6 +13,7 @@
 
 ### Fixed
 - Added `sqlalchemy<1.4` version constraint since SQLAlchemy 1.4 is not supported.
+- Added `AsyncEngine.hide_parameters` property.
 
 ## [0.16.0]
 
@@ -102,7 +107,8 @@
 ## [0.10.0] - 2016-12-19
 Initial release.
 
-[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.16.0...HEAD
+[unreleased]: https://github.com/RazerM/sqlalchemy_aio/compare/0.17.0...HEAD
+[0.16.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.16.0...0.17.0
 [0.16.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.15.0...0.16.0
 [0.15.0]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.1...0.15.0
 [0.14.1]: https://github.com/RazerM/sqlalchemy_aio/compare/0.14.0...0.14.1
